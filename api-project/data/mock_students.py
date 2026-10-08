@@ -3,7 +3,7 @@ students = [
         "id": 1,
         "name": "Mayank",
         "course": "AIML",
-        "year": 3
+        "year": 2
     },
     {
         "id": 2,
