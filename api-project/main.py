@@ -15,6 +15,7 @@ app.include_router(student_router)
 
 @app.get("/")
 def root():
+
     return {
         "message": "Student API is running"
     }
