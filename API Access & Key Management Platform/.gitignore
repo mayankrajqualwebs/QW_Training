@@ -1,0 +1,25 @@
+# Environment secrets
+.env
+.env.*
+
+# Allow the example configuration
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+
+# Generated Prisma client
+# Keep generated files out of version control if your setup
+# regenerates them reliably from the schema.

@@ -1,0 +1,6 @@
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+
+6EBAmwjWlHxVPk5OwfxLSR8_sQfDFteIqKx6JAfAFyw7dq9mkDPtSJItd-T4jLaH
+
+
+ak_live_kr3WpDqfpu_Wvs8yG0W1QXm5jd3aZE--VVAfdGsFW3A
