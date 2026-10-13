@@ -992,6 +992,15 @@ td code {
   font-size: 13px;
 }
 
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
