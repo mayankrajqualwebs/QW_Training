@@ -1,0 +1,159 @@
+// Prisma Schema Configuration
+// Database: PostgreSQL
+// Client: prisma-client-py
+
+generator client {
+  provider = "prisma-client-py"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------------------
+// Membership Roles
+// -----------------------------------------------------------------------------
+enum MembershipRole {
+  OWNER      // Full control: delete org, manage billing, members, and keys
+  ADMIN      // Operational control: manage members, projects, and all keys
+  DEVELOPER  // Standard engineer: create projects and create/manage own keys
+  VIEWER     // Read-only access to analytics and dashboard
+}
+
+// -----------------------------------------------------------------------------
+// Core User Model
+// -----------------------------------------------------------------------------
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relationships
+  memberships          Membership[]
+  createdOrganizations Organization[] @relation("OrganizationCreator")
+  refreshTokens        RefreshToken[]
+  createdApiKeys       ApiKey[]       @relation("ApiKeyCreator")
+}
+
+// -----------------------------------------------------------------------------
+// Organization (Multi-Tenant Workspace)
+// -----------------------------------------------------------------------------
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  createdBy  User         @relation("OrganizationCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  memberships Membership[]
+  projects    Project[]
+}
+
+// -----------------------------------------------------------------------------
+// Membership (Join table linking User <-> Organization with RBAC)
+// -----------------------------------------------------------------------------
+model Membership {
+  id             String         @id @default(cuid())
+  userId         String
+  organizationId String
+  role           MembershipRole @default(DEVELOPER)
+  createdAt      DateTime       @default(now())
+
+  // Relationships
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId, role])
+}
+
+// -----------------------------------------------------------------------------
+// Project (Application container scoped to an Organization)
+// -----------------------------------------------------------------------------
+model Project {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  apiKeys      ApiKey[]
+  requestLogs  RequestLog[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+}
+
+// -----------------------------------------------------------------------------
+// ApiKey (Developer credentials for authenticating API consumers)
+// -----------------------------------------------------------------------------
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String
+  keyPrefix   String    // Public prefix for UI identification (e.g. ak_live_3vK...)
+  keyHash     String    @unique // SHA-256 hash of the secret (raw secret is never stored)
+  scopes      String[]  // Array of granted permissions (e.g. ['data:read', 'data:write'])
+  projectId   String
+  createdById String
+  expiresAt   DateTime? // Optional automatic expiration timestamp
+  lastUsedAt  DateTime? // Updated automatically whenever key is used
+  revokedAt   DateTime? // Soft-revocation timestamp (null if active)
+  createdAt   DateTime  @default(now())
+
+  // Relationships
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy   User         @relation("ApiKeyCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  requestLogs RequestLog[]
+
+  @@index([projectId])
+  @@index([expiresAt])
+}
+
+// -----------------------------------------------------------------------------
+// RefreshToken (Stores hashed refresh tokens for session rotation)
+// -----------------------------------------------------------------------------
+model RefreshToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique // SHA-256 hash of the refresh token
+  userId    String
+  expiresAt DateTime
+  revokedAt DateTime? // Set upon rotation or logout
+  createdAt DateTime  @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+// -----------------------------------------------------------------------------
+// RequestLog (Audit and telemetry logs for protected API calls)
+// -----------------------------------------------------------------------------
+model RequestLog {
+  id         String   @id @default(cuid())
+  projectId  String
+  apiKeyId   String?  // Nullable if request was made without an identifiable key
+  method     String   // HTTP Method (GET, POST, etc.)
+  path       String   // Requested URL path
+  statusCode Int      // HTTP Response Status (200, 401, 429, etc.)
+  latencyMs  Int      // High-resolution processing duration in milliseconds
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  // Relationships
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  apiKey  ApiKey? @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+  @@index([apiKeyId, createdAt])
+  @@index([statusCode, createdAt])
+}
