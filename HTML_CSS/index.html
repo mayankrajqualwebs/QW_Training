@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Quick Revision</title>
+    <meta name="description" content="A quick HTML revision cheat sheet.">
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Headings and text -->
+    <header>
+        <h1>My Website</h1>
+        <nav>
+            <a href="#about">About</a>
+            <a href="#projects">Projects</a>
+            <a href="#contact">Contact</a>
+        </nav>
+    </header>
+
+    <main>
+        <section id="about">
+            <h2>About Me</h2>
+            <p><strong>Important</strong>, <em>emphasized</em>,
+                <mark>highlighted</mark> text. <span>Inline text</span>
+            </p>
+            <img src="photo.jpg" alt="Describe the image" width="200">
+        </section>
+
+        <section id="projects">
+            <h2>Projects</h2>
+            <!-- Lists -->
+            <ul>
+                <li>Python</li>
+                <li>HTML</li>
+            </ul>
+            <ol>
+                <li>Plan</li>
+                <li>Build</li>
+            </ol>
+
+            <!-- Table -->
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Project</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Portfolio</td>
+                        <td>Learning</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Media -->
+            <audio controls src="music.mp3"></audio>
+            <video controls width="300" src="demo.mp4"></video>
+            <iframe src="https://example.com" title="Example site" width="300" height="200"></iframe>
+        </section>
+
+        <section id="contact">
+            <h2>Contact</h2>
+            <!-- Form: backend endpoint required to submit/save data -->
+            <form action="/contact" method="post">
+                <label for="name">Name</label>
+                <input id="name" name="name" type="text" required>
+
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" required>
+
+                <label for="age">Age</label>
+                <input id="age" name="age" type="number" min="18" max="100">
+
+                <label for="message">Message</label>
+                <textarea id="message" name="message"></textarea>
+
+                <button type="submit">Send</button>
+                <button type="reset">Reset</button>
+            </form>
+            <p><a href="mailto:hello@example.com">Email me</a></p>
+        </section>
+
+        <details>
+            <summary>More information</summary>
+            <p>Extra content shown when expanded.</p>
+        </details>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 My Website</p>
+    </footer>
+</body>
+
+</html>
