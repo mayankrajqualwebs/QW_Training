@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import {
   analyticsService, apiKeyService, authService, clearTokens,
-  errorMessage, hasSession, healthService, organizationService,
+  errorMessage, hasSession, /* healthService, */ organizationService,
   projectService, protectedApiService,
   type ApiKey, type CreatedApiKey, type Organization,
   type Project, type TestApiResponse, type UsageSummary, type User,
@@ -59,11 +59,11 @@ function App() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  // Health check status
-  const [healthStatus, setHealthStatus] = useState<{
-    status: "checking" | "healthy" | "degraded" | "offline";
-    label: string;
-  }>({ status: "checking", label: "Checking backend…" });
+  // Health check status (commented out)
+  // const [healthStatus, setHealthStatus] = useState<{
+  //   status: "checking" | "healthy" | "degraded" | "offline";
+  //   label: string;
+  // }>({ status: "checking", label: "Checking backend…" });
 
   // Filtering & Search
   const [keyFilter, setKeyFilter] = useState<"all" | "active" | "revoked">("all");
@@ -98,26 +98,26 @@ function App() {
     setTimeout(() => setCopiedText(null), 2500);
   };
 
-  const checkHealth = useCallback(async () => {
-    try {
-      const base = await healthService.check();
-      if (base?.status === "healthy") {
-        try {
-          const db = await healthService.database();
-          if (db?.database === "connected") {
-            setHealthStatus({ status: "healthy", label: "Connected · DB Healthy" });
-            return;
-          }
-        } catch {
-          setHealthStatus({ status: "degraded", label: "API Online · DB Offline" });
-          return;
-        }
-      }
-      setHealthStatus({ status: "healthy", label: "FastAPI Online" });
-    } catch {
-      setHealthStatus({ status: "offline", label: "FastAPI Offline" });
-    }
-  }, []);
+  // const checkHealth = useCallback(async () => {
+  //   try {
+  //     const base = await healthService.check();
+  //     if (base?.status === "healthy") {
+  //       try {
+  //         const db = await healthService.database();
+  //         if (db?.database === "connected") {
+  //           setHealthStatus({ status: "healthy", label: "Connected · DB Healthy" });
+  //           return;
+  //         }
+  //       } catch {
+  //         setHealthStatus({ status: "degraded", label: "API Online · DB Offline" });
+  //         return;
+  //       }
+  //     }
+  //     setHealthStatus({ status: "healthy", label: "FastAPI Online" });
+  //   } catch {
+  //     setHealthStatus({ status: "offline", label: "FastAPI Offline" });
+  //   }
+  // }, []);
 
   const loadOrganizations = useCallback(async () => {
     const data = await organizationService.list();
@@ -164,7 +164,7 @@ function App() {
     if (!user) return;
     setLoading(true);
     setError("");
-    void checkHealth();
+    // void checkHealth();
     try {
       await loadOrganizations();
       if (organizationId) {
@@ -182,13 +182,13 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [user, checkHealth, loadOrganizations, organizationId, loadProjects, projectId, loadKeys, loadSummary, days]);
+  }, [user, /* checkHealth, */ loadOrganizations, organizationId, loadProjects, projectId, loadKeys, loadSummary, days]);
 
-  useEffect(() => {
-    void checkHealth();
-    const interval = setInterval(() => void checkHealth(), 30000);
-    return () => clearInterval(interval);
-  }, [checkHealth]);
+  // useEffect(() => {
+  //   void checkHealth();
+  //   const interval = setInterval(() => void checkHealth(), 30000);
+  //   return () => clearInterval(interval);
+  // }, [checkHealth]);
 
   useEffect(() => {
     let alive = true;
@@ -569,13 +569,17 @@ function App() {
         <header className="topbar">
           <div className="breadcrumb">Platform <span>/</span> <strong>{page}</strong></div>
           <div className="topbar-right">
-            <span
+            {/* Health check indicator commented out */}
+            {/* <span
               className={`online-pill ${healthStatus.status}`}
               title="Click to check backend and database health"
               onClick={() => void checkHealth()}
               style={{ cursor: "pointer" }}
             >
               <i /> {healthStatus.label}
+            </span> */}
+            <span className="online-pill healthy">
+              <i /> API Workspace
             </span>
             <button className="icon-button" title="Refresh data" onClick={() => void refreshWorkspace()}>
               <RefreshCw size={17} />
