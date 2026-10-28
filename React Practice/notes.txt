@@ -1,0 +1,8 @@
+To build a initial Project run this command to set up react app...
+npm create vite@latest my-react-app -- --template react
+
+
+Then run this command to start the development server...
+npm run dev
+
+
