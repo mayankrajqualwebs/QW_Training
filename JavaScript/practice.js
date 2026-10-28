@@ -124,21 +124,128 @@ const prompt = require('prompt-sync')({ sigint: true });
 
 // console.log(car.features.length);
 
-let students = [
-    { name: "Aman", marks: 85 },
-    { name: "Riya", marks: 45 },
-    { name: "Karan", marks: 92 }
-];
 
-// Get all student names
-let names = students.map(s => s.name);
 
-// Get students who passed
-let passed = students.filter(s => s.marks >= 50);
+// let students = [
+//     { name: "Aman", marks: 85 },
+//     { name: "Riya", marks: 45 },
+//     { name: "Karan", marks: 92 }
+// ];
 
-// Find one student
-let student = students.find(s => s.name === "T");
+// // Get all student names
+// let names = students.map(s => s.name);
 
-console.log(names);
-console.log(passed);
-console.log(student);
+// // Get students who passed
+// let passed = students.filter(s => s.marks >= 50);
+
+// // Find one student
+// let student = students.find(s => s.name === "T");
+
+// console.log(names);
+// console.log(passed);
+// console.log(student);
+
+
+
+// async function getUsers() {
+//     try {
+//         let response = await fetch(
+//             "https://jsonplaceholder.typicode.com/users"
+//         );
+
+//         let data = await response.json();
+
+//         console.log(data);
+//     } catch (error) {
+//         console.log("Error:", error);
+//     }
+// }
+
+// getUsers();
+
+
+
+async function getUsers() {
+    try {
+        let response = await fetch(
+            "https://jsonplaceholder.typicode.com/users"
+        );
+
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        let users = await response.json();
+
+        users.forEach(user => {
+            console.log(user.name);
+        });
+
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+// getUsers();
+
+
+async function createUser() {
+    try {
+        let response = await fetch(
+            "https://jsonplaceholder.typicode.com/users",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: "xyz",
+                    email: "xyz@example.com"
+                })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        let data = await response.json();
+        console.log(data);
+
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+//createUser();
+//getUsers();
+
+// const m = [1, 2, 3, 4, 5];
+// const square = m.map((num) => num * num);
+// console.log(square);
+
+// const even = m.filter((num) => num % 2 === 0);
+// console.log(even);
+
+// const sum = m.reduce((acc, curr) => acc + curr, 0);
+// console.log(sum);
+
+// m.forEach((num) => console.log(num * 2));
+
+// const fEven = m.find((num) => num % 2 === 0);
+// console.log(fEven);
+
+
+// const n = [1, 2, 3, 4, -5];
+// const hasNeg = n.some((num) => num < 0);
+// console.log(hasNeg);
+
+
+// const numbers = [1, 2, 3];
+
+// const iterator = numbers[Symbol.iterator]();
+
+// console.log(iterator.next()); // { value: 1, done: false }
+// console.log(iterator.next()); // { value: 2, done: false }
+// console.log(iterator.next()); // { value: 3, done: false }
+// console.log(iterator.next()); // { value: undefined, done: true }

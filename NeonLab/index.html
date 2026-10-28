@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080811">
+    <title>NEON LAB | Enter the Future</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+    <header class="navbar">
+        <a href="#" class="logo">NEON<span>LAB.</span></a>
+
+        <nav class="nav-links" aria-label="Main navigation">
+            <a href="#home">Home</a>
+            <a href="#about">About</a>
+            <a href="#projects">Projects</a>
+        </nav>
+
+        <div class="nav-controls">
+            <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">
+                ◐ Theme
+            </button>
+            <a href="#contact" class="nav-cta">Let's Talk ↗</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero" id="home">
+            <div class="hero-glow"></div>
+
+            <p class="eyebrow">
+                <span class="status-dot"></span>
+                DIGITAL EXPERIMENTS STUDIO
+            </p>
+
+            <h1>
+                WE MAKE<br>
+                <span class="gradient-text">DIGITAL</span><br>
+                FEEL ALIVE<span class="accent">.</span>
+            </h1>
+
+            <p class="hero-description">
+                Exploring the intersection of code, creativity,
+                and futuristic digital experiences.
+            </p>
+
+            <div class="hero-actions">
+                <a href="#projects" class="btn-primary">
+                    Explore our universe ↗
+                </a>
+                <a href="#about" class="btn-secondary">
+                    Discover more ↓
+                </a>
+                <button class="btn-secondary" id="surpriseBtn" type="button">
+                    Activate surprise ✦
+                </button>
+            </div>
+
+            <div class="hero-footer">
+                <span>INDEPENDENT BY DESIGN</span>
+                <span>EST. 2026</span>
+            </div>
+        </section>
+
+        <section class="info-section" id="about">
+            <p class="eyebrow">01 / THE VISION</p>
+            <h2>Ordinary is <span class="gradient-text">overrated.</span></h2>
+            <p>We experiment. We build. We push pixels beyond the ordinary.</p>
+        </section>
+
+        <section class="info-section" id="projects">
+            <p class="eyebrow">02 / THE PLAYGROUND</p>
+            <h2>Ideas become <span class="gradient-text">reality.</span></h2>
+            <p>Interactive experiences are coming online.</p>
+        </section>
+
+        <footer class="info-section" id="contact">
+            <p>GOT AN IDEA? <a href="mailto:hello@neonlab.dev">LET'S TALK ↗</a></p>
+        </footer>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+</body>
+
+</html>
