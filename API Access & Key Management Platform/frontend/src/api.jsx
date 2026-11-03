@@ -1,5 +1,4 @@
-
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import axios from "axios";
 
 const BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
@@ -16,40 +15,48 @@ const authApi = axios.create({
 
 let accessToken = localStorage.getItem("access_token");
 let refreshToken = localStorage.getItem("refresh_token");
-let refreshPromise: Promise<string | null> | null = null;
+let refreshPromise = null;
 
-export function saveTokens(access: string, refresh: string) {
+// Save authentication tokens
+export function saveTokens(access, refresh) {
     accessToken = access;
     refreshToken = refresh;
+
     localStorage.setItem("access_token", access);
     localStorage.setItem("refresh_token", refresh);
 }
 
+// Clear authentication tokens
 export function clearTokens() {
     accessToken = null;
     refreshToken = null;
+
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
 }
 
+// Check whether a session exists
 export function hasSession() {
     return Boolean(accessToken || localStorage.getItem("access_token"));
 }
 
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+// Request interceptor
+api.interceptors.request.use((config) => {
     const token = accessToken || localStorage.getItem("access_token");
+
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
 });
 
+// Response interceptor
 api.interceptors.response.use(
     (response) => response,
-    async (error: AxiosError) => {
-        const original = error.config as
-            | (InternalAxiosRequestConfig & { _retried?: boolean })
-            | undefined;
+
+    async (error) => {
+        const original = error.config;
 
         if (
             error.response?.status !== 401 ||
@@ -61,10 +68,13 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        const currentRefresh = refreshToken || localStorage.getItem("refresh_token");
+        const currentRefresh =
+            refreshToken || localStorage.getItem("refresh_token");
+
         if (!currentRefresh) {
             clearTokens();
             window.dispatchEvent(new Event("session-expired"));
+
             return Promise.reject(error);
         }
 
@@ -73,15 +83,25 @@ api.interceptors.response.use(
         try {
             if (!refreshPromise) {
                 refreshPromise = authApi
-                    .post("/auth/refresh", { refresh_token: currentRefresh })
+                    .post("/auth/refresh", {
+                        refresh_token: currentRefresh,
+                    })
                     .then((response) => {
-                        const data = response.data as TokenResponse;
-                        saveTokens(data.access_token, data.refresh_token);
+                        const data = response.data;
+
+                        saveTokens(
+                            data.access_token,
+                            data.refresh_token
+                        );
+
                         return data.access_token;
                     })
                     .catch(() => {
                         clearTokens();
-                        window.dispatchEvent(new Event("session-expired"));
+                        window.dispatchEvent(
+                            new Event("session-expired")
+                        );
+
                         return null;
                     })
                     .finally(() => {
@@ -96,117 +116,66 @@ api.interceptors.response.use(
             }
 
             original.headers.Authorization = `Bearer ${newAccessToken}`;
+
             return api(original);
         } catch {
             clearTokens();
             window.dispatchEvent(new Event("session-expired"));
+
             return Promise.reject(error);
         }
-    },
+    }
 );
 
-export interface TokenResponse {
-    access_token: string;
-    refresh_token: string;
-    token_type: string;
-    expires_in: number;
-}
-
-export interface User {
-    id: string;
-    email: string;
-}
-
-export interface Organization {
-    id: string;
-    name: string;
-    slug: string;
-    role: string;
-}
-
-export interface Project {
-    id: string;
-    name: string;
-    slug: string;
-    organization_id: string;
-}
-
-export interface ApiKey {
-    id: string;
-    name: string;
-    key_prefix: string;
-    scopes: string[];
-    expires_at: string | null;
-    last_used_at: string | null;
-    revoked_at: string | null;
-    created_at: string;
-}
-
-export interface CreatedApiKey extends ApiKey {
-    api_key: string;
-}
-
-export interface UsageSummary {
-    project_id: string;
-    period_days: number;
-    total_requests: number;
-    successful_requests: number;
-    error_requests: number;
-    average_latency_ms: number;
-    error_rate_percent: number;
-    status_code_breakdown: Record<string, number>;
-}
-
-export interface OrganizationCreate {
-    name: string;
-    slug: string;
-}
-
-export interface ProjectCreate {
-    name: string;
-    slug: string;
-}
-
-export interface ApiKeyCreate {
-    name: string;
-    scopes: string[];
-    expires_at: string | null;
-}
-
+// Authentication services
 export const authService = {
-    async register(email: string, password: string) {
-        const response = await api.post<User>("/auth/register", {
+    async register(email, password) {
+        const response = await api.post("/auth/register", {
             email,
             password,
         });
+
         return response.data;
     },
 
-    async login(email: string, password: string) {
+    async login(email, password) {
         const form = new URLSearchParams();
+
         form.set("username", email);
         form.set("password", password);
 
-        const response = await authApi.post<TokenResponse>(
+        const response = await authApi.post(
             "/auth/login",
             form,
-            { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
+            {
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+            }
         );
 
-        saveTokens(response.data.access_token, response.data.refresh_token);
+        saveTokens(
+            response.data.access_token,
+            response.data.refresh_token
+        );
+
         return response.data;
     },
 
     async me() {
-        const response = await api.get<User>("/auth/me");
+        const response = await api.get("/auth/me");
+
         return response.data;
     },
 
     async logout() {
         const token = refreshToken;
+
         try {
             if (token) {
-                await api.post("/auth/logout", { refresh_token: token });
+                await api.post("/auth/logout", {
+                    refresh_token: token,
+                });
             }
         } finally {
             clearTokens();
@@ -214,112 +183,122 @@ export const authService = {
     },
 };
 
+// Organization services
 export const organizationService = {
     async list() {
-        const response = await api.get<Organization[]>("/organizations");
+        const response = await api.get("/organizations");
+
         return response.data;
     },
 
-    async create(data: OrganizationCreate) {
-        const response = await api.post<Organization>("/organizations", data);
+    async create(data) {
+        const response = await api.post("/organizations", data);
+
         return response.data;
     },
 };
 
+// Project services
 export const projectService = {
-    async list(organizationId: string) {
-        const response = await api.get<Project[]>(
-            `/organizations/${organizationId}/projects`,
+    async list(organizationId) {
+        const response = await api.get(
+            `/organizations/${organizationId}/projects`
         );
+
         return response.data;
     },
 
-    async create(organizationId: string, data: ProjectCreate) {
-        const response = await api.post<Project>(
+    async create(organizationId, data) {
+        const response = await api.post(
             `/organizations/${organizationId}/projects`,
-            data,
+            data
         );
+
         return response.data;
     },
 };
 
+// API key services
 export const apiKeyService = {
-    async list(organizationId: string, projectId: string) {
-        const response = await api.get<ApiKey[]>(
-            `/organizations/${organizationId}/projects/${projectId}/api-keys`,
+    async list(organizationId, projectId) {
+        const response = await api.get(
+            `/organizations/${organizationId}/projects/${projectId}/api-keys`
         );
+
         return response.data;
     },
 
-    async create(
-        organizationId: string,
-        projectId: string,
-        data: ApiKeyCreate,
-    ) {
-        const response = await api.post<CreatedApiKey>(
+    async create(organizationId, projectId, data) {
+        const response = await api.post(
             `/organizations/${organizationId}/projects/${projectId}/api-keys`,
-            data,
+            data
         );
+
         return response.data;
     },
 
-    async revoke(organizationId: string, projectId: string, keyId: string) {
+    async revoke(organizationId, projectId, keyId) {
         await api.delete(
-            `/organizations/${organizationId}/projects/${projectId}/api-keys/${keyId}`,
+            `/organizations/${organizationId}/projects/${projectId}/api-keys/${keyId}`
         );
     },
 };
 
+// Analytics services
 export const analyticsService = {
-    async summary(
-        organizationId: string,
-        projectId: string,
-        days = 7,
-    ) {
-        const response = await api.get<UsageSummary>(
+    async summary(organizationId, projectId, days = 7) {
+        const response = await api.get(
             `/organizations/${organizationId}/projects/${projectId}/analytics/summary`,
-            { params: { days } },
+            {
+                params: { days },
+            }
         );
+
         return response.data;
     },
 };
 
+// Health check services
 export const healthService = {
     async check() {
-        const response = await axios.get<{ status: string; service: string }>(
+        const response = await axios.get(
             `${BASE_URL}/health`,
-            { timeout: 5000 },
+            {
+                timeout: 5000,
+            }
         );
+
         return response.data;
     },
+
     async database() {
-        const response = await axios.get<{ status: string; database: string }>(
+        const response = await axios.get(
             `${BASE_URL}/health/database`,
-            { timeout: 5000 },
+            {
+                timeout: 5000,
+            }
         );
+
         return response.data;
     },
 };
 
-export interface TestApiResponse {
-    status: number;
-    statusText: string;
-    data: unknown;
-    latencyMs: number;
-    ok: boolean;
-}
-
+// Protected API testing service
 export const protectedApiService = {
-    async test(projectId: string, apiKey: string): Promise<TestApiResponse> {
+    async test(projectId, apiKey) {
         const start = performance.now();
+
         try {
             const response = await axios.get(
                 `${BASE_URL}/v1/projects/${projectId}/data`,
                 {
-                    headers: { "X-API-Key": apiKey },
+                    headers: {
+                        "X-API-Key": apiKey,
+                    },
                     timeout: 15000,
-                },
+                }
             );
+
             return {
                 status: response.status,
                 statusText: response.statusText || "OK",
@@ -329,6 +308,7 @@ export const protectedApiService = {
             };
         } catch (err) {
             const latencyMs = Math.round(performance.now() - start);
+
             if (axios.isAxiosError(err) && err.response) {
                 return {
                     status: err.response.status,
@@ -338,24 +318,33 @@ export const protectedApiService = {
                     ok: false,
                 };
             }
+
             throw err;
         }
     },
 };
 
-export function errorMessage(error: unknown): string {
+// Error handling utility
+export function errorMessage(error) {
     if (axios.isAxiosError(error)) {
         const detail = error.response?.data?.detail;
 
-        if (typeof detail === "string") return detail;
+        if (typeof detail === "string") {
+            return detail;
+        }
+
         if (detail && typeof detail === "object") {
             return JSON.stringify(detail);
         }
+
         if (!error.response) {
             return "Cannot reach the API server. Check that FastAPI is running.";
         }
+
         return error.message;
     }
 
-    return error instanceof Error ? error.message : "Something went wrong.";
+    return error instanceof Error
+        ? error.message
+        : "Something went wrong.";
 }
