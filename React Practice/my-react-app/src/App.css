@@ -1,4 +1,4 @@
-.counter {
+/* .counter {
   font-size: 16px;
   padding: 5px 10px;
   border-radius: 5px;
@@ -181,4 +181,160 @@
     right: 0;
     border-right-color: var(--border);
   }
+} */
+
+
+/* .App {
+  text-align: center;
+  margin-top: 50px;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  color: #4CAF50;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.input-field {
+  padding: 10px;
+  font-size: 16px;
+  width: 250px;
+  margin: 20px 0;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  outline: none;
+  transition: border 0.3s ease;
+}
+
+.input-field:focus {
+  border-color: #4CAF50;
+}
+
+.save-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.save-button:hover {
+  background-color: #45a049;
+}
+
+.save-button:active {
+  background-color: #388e3c;
+} */
+
+
+
+/* body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: flex-start;
+  height: 100vh;
+  background-color: #f0f0f0;
+}
+
+.parent-container {
+  text-align: center;
+}
+
+.child-container {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: #0056b3;
+} */
+
+
+/* App.css */
+
+/* .App {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+body {
+  background-color: antiquewhite;
+}
+
+.App>h2 {
+  text-align: center;
+  font-size: 2rem;
+}
+
+.App>button {
+  width: 20rem;
+  font-size: larger;
+  padding: 1vmax;
+  height: 2.6rem;
+  color: white;
+  background-color: rgb(34, 34, 33);
+  border-radius: 10px;
+}
+
+button:hover {
+  background-color: rgb(80, 80, 78);
+
+} */
+
+
+/* App.css */
+
+.App {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+body {
+  background-color: antiquewhite;
+}
+
+.App>h2 {
+  text-align: center;
+}
+
+.App>button {
+  width: 17rem;
+  font-size: larger;
+  padding: 1vmax;
+  height: 2.6rem;
+  color: white;
+  background-color: rgb(34, 34, 33);
+  border-radius: 10px;
+}
+
+button:hover {
+  background-color: rgb(80, 80, 78);
+
 }
