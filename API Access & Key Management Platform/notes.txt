@@ -4,3 +4,130 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
 
 
 ak_live_kr3WpDqfpu_Wvs8yG0W1QXm5jd3aZE--VVAfdGsFW3A
+
+
+
+
+Frontend File Structure:----
+frontend/
+├── public/
+│   ├── favicon.svg
+│   └── icons.svg
+│
+├── src/
+│   ├── assets/                     # Static assets (hero.png, react.svg, vite.svg)
+│   │
+│   ├── components/                 # Globally shared, reusable UI components
+│   │   ├── Alert/
+│   │   │   ├── Alert.jsx
+│   │   │   └── index.js
+│   │   ├── EmptyMessage/
+│   │   │   ├── EmptyMessage.jsx
+│   │   │   └── index.js
+│   │   ├── Metric/
+│   │   │   ├── Metric.jsx
+│   │   │   └── index.js
+│   │   ├── Modal/
+│   │   │   ├── Modal.jsx
+│   │   │   └── index.js
+│   │   └── index.js
+│   │
+│   ├── context/                    # Global React Context providers & State management
+│   │   ├── AuthContext.js          # Authentication Context definition
+│   │   ├── AuthProvider.jsx        # User state, token restoration & session handling
+│   │   ├── WorkspaceContext.js     # Workspace Context definition
+│   │   ├── WorkspaceProvider.jsx   # Organizations, projects, keys, telemetry & modals
+│   │   └── index.js
+│   │
+│   ├── features/                   # Feature-specific modules
+│   │   ├── analytics/
+│   │   │   ├── components/
+│   │   │   │   ├── AnalyticsChart.jsx
+│   │   │   │   └── StatusCodeBreakdown.jsx
+│   │   │   └── index.js
+│   │   │
+│   │   ├── apiKeys/
+│   │   │   ├── components/
+│   │   │   │   ├── ApiTester.jsx
+│   │   │   │   ├── CreateKeyModal.jsx
+│   │   │   │   ├── CreatedKeyModal.jsx
+│   │   │   │   └── KeyList.jsx
+│   │   │   └── index.js
+│   │   │
+│   │   ├── authentication/
+│   │   │   ├── components/
+│   │   │   │   └── AuthScreen.jsx
+│   │   │   └── index.js
+│   │   │
+│   │   ├── organizations/
+│   │   │   ├── components/
+│   │   │   │   └── CreateOrganizationModal.jsx
+│   │   │   └── index.js
+│   │   │
+│   │   ├── projects/
+│   │   │   ├── components/
+│   │   │   │   ├── CreateProjectModal.jsx
+│   │   │   │   └── ProjectList.jsx
+│   │   │   └── index.js
+│   │   │
+│   │   └── settings/
+│   │       ├── components/
+│   │       │   └── SettingsContent.jsx
+│   │       └── index.js
+│   │
+│   ├── hooks/                      # Custom React hooks
+│   │   ├── useAuth.js              # Access AuthContext
+│   │   ├── useClipboard.js         # Clipboard copy with visual feedback
+│   │   ├── useWorkspace.js         # Access WorkspaceContext
+│   │   └── index.js
+│   │
+│   ├── layouts/                    # Shared layouts and shell components
+│   │   ├── MainLayout.jsx          # App shell, alerts, welcome banner, modal host, footer
+│   │   ├── SelectionBar.jsx        # Organization and project selector bar
+│   │   ├── Sidebar.jsx             # Nav links with dynamic counters, org switcher, user info
+│   │   ├── Topbar.jsx              # Breadcrumbs and workspace status indicator
+│   │   └── index.js
+│   │
+│   ├── pages/                      # Route-level page components
+│   │   ├── AnalyticsPage.jsx       # Telemetry, area chart, and HTTP status cards
+│   │   ├── ApiKeysPage.jsx         # Key management, search filter tabs, revoke actions
+│   │   ├── OverviewPage.jsx        # Metrics grid, traffic chart, recent keys, tester
+│   │   ├── ProjectsPage.jsx        # Projects table and creation trigger
+│   │   ├── SettingsPage.jsx        # Account, organization, cheatsheet, workspace actions
+│   │   └── index.js
+│   │
+│   ├── routes/                     # Routing & navigation configuration
+│   │   ├── AppRoutes.jsx           # Dynamic page rendering
+│   │   ├── navigation.js           # Navigation links and icons metadata
+│   │   └── index.js
+│   │
+│   ├── services/                   # Modular API clients and backend services
+│   │   ├── analyticsService.js     # Analytics summary API
+│   │   ├── api.js                  # Axios instances, token storage, interceptors
+│   │   ├── apiKeyService.js        # API key listing, generation, and revocation
+│   │   ├── authService.js          # Authentication (login, register, me, logout)
+│   │   ├── healthService.js        # System & database health checks
+│   │   ├── organizationService.js  # Organization listing and creation
+│   │   ├── projectService.js       # Project listing and creation
+│   │   ├── protectedApiService.js  # Protected API testing endpoint
+│   │   └── index.js                # Consolidated services export
+│   │
+│   ├── styles/                     # Global styles and design tokens
+│   │   ├── App.css
+│   │   └── index.css
+│   │
+│   ├── utils/                      # Reusable pure utility functions
+│   │   ├── date.js                 # `dateLabel()` formatter
+│   │   ├── error.js                # `errorMessage()` extractor for Axios/FastAPI errors
+│   │   ├── string.js               # `slugify()` helper
+│   │   └── index.js
+│   │
+│   ├── api.js                      # Backward-compatible proxy exporting all services
+│   ├── App.css                     # Stylesheet forwarding to src/styles/App.css
+│   ├── App.jsx                     # High-level application composition (< 40 lines)
+│   ├── index.css                   # Stylesheet forwarding to src/styles/index.css
+│   └── main.jsx                    # React application entry point
+│
+├── index.html
+├── package.json
+└── vite.config.ts
