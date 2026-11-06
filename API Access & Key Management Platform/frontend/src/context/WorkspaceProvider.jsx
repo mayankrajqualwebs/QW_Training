@@ -14,6 +14,7 @@ import {
 } from "../services";
 import { errorMessage } from "../utils/error";
 import { useAuth } from "../hooks/useAuth";
+import Modal from "../components/Modal";
 
 export function WorkspaceProvider({ children }) {
     const { user } = useAuth();
@@ -40,6 +41,13 @@ export function WorkspaceProvider({ children }) {
     const [showProjectForm, setShowProjectForm] = useState(false);
     const [showKeyForm, setShowKeyForm] = useState(false);
     const [showCreatedKey, setShowCreatedKey] = useState(null);
+    const [showRevokeModal, setShowRevokeModal] = useState(false);
+    const [selectedKey, setSelectedKey] = useState(null);
+
+    const handleRevokeClick = (key) => {
+        setSelectedKey(key);
+        setShowRevokeModal(true);
+    };
 
     // Testing Console
     const [testingKey, setTestingKey] = useState("");
@@ -297,15 +305,12 @@ export function WorkspaceProvider({ children }) {
 
     const revokeKey = useCallback(async (key) => {
         if (!organizationId || !projectId) return;
-        if (
-            !window.confirm(
-                `Revoke API key "${key.name}"? Applications using this key will immediately lose access.`
-            )
-        )
-            return;
+
         setError("");
+
         try {
             await apiKeyService.revoke(organizationId, projectId, key.id);
+
             setKeys((items) =>
                 items.map((item) =>
                     item.id === key.id
@@ -313,7 +318,10 @@ export function WorkspaceProvider({ children }) {
                         : item
                 )
             );
+
             setNotice(`API key "${key.name}" revoked.`);
+            setShowRevokeModal(false);
+            setSelectedKey(null);
         } catch (e) {
             setError(errorMessage(e));
         }
@@ -392,10 +400,52 @@ export function WorkspaceProvider({ children }) {
                 createProject,
                 createKey,
                 revokeKey,
+                handleRevokeClick,
                 testProtectedApi,
             }}
         >
             {children}
+
+            {showRevokeModal && selectedKey && (
+                <Modal
+                    title="Revoke API Key"
+                    onClose={() => {
+                        setShowRevokeModal(false);
+                        setSelectedKey(null);
+                    }}
+                >
+                    <div className="modal-body">
+                        <p>
+                            Are you sure you want to revoke API key
+                            <strong> "{selectedKey.name}"</strong>?
+                        </p>
+
+                        <p className="text-muted">
+                            Applications using this key will immediately lose access.
+                            This action cannot be undone.
+                        </p>
+
+                        <div className="modal-actions">
+                            <button
+                                className="secondary-button"
+                                onClick={() => {
+                                    setShowRevokeModal(false);
+                                    setSelectedKey(null);
+                                }}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                className="danger-button-main"
+                                onClick={() => revokeKey(selectedKey)}
+                            >
+                                Revoke Key
+                            </button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
         </WorkspaceContext.Provider>
     );
 }

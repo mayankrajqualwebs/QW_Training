@@ -20,12 +20,13 @@ export function OverviewPage() {
         selectedProject,
         keys,
         revokeKey,
+        handleRevokeClick,
         setTestingKey,
         setPage,
         setShowKeyForm,
     } = useWorkspace();
 
-  const [showFullKeyModal, setShowFullKeyModal] = useState(false);
+    const [showFullKeyModal, setShowFullKeyModal] = useState(false);
 
     const chartData = summary
         ? [
@@ -145,13 +146,13 @@ export function OverviewPage() {
 
                     <KeyList
                         keys={keys.slice(0, 5)}
-                        onRevoke={revokeKey}
+                        onRevoke={handleRevokeClick}
                         onSelectForTest={(k) => setTestingKey(k.key_prefix)}
                     />
 
                     {keys.length > 5 && (
                         <button
-                            className="text-button"
+                            className="primary-button compact"
                             onClick={() => setPage("API Keys")}
                         >
                             View all {keys.length} keys →

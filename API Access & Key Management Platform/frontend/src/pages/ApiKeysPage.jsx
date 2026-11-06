@@ -18,6 +18,7 @@ export function ApiKeysPage() {
         setTestingKey,
         setPage,
         setNotice,
+        handleRevokeClick,
     } = useWorkspace();
 
     return (
@@ -73,24 +74,24 @@ export function ApiKeysPage() {
 
             <KeyList
                 keys={filteredKeys}
-                onRevoke={revokeKey}
+                onRevoke={handleRevokeClick}
                 detailed
                 onSelectForTest={async (key) => {
                     const fullKey = key.api_key ?? null;
                     if (fullKey) {
-                      setTestingKey(fullKey);
-                      setPage("Overview");
-                      setNotice(`Loaded full API key into tester. Running test...`);
-                      try {
-                        await testProtectedApi(fullKey);
-                      } catch (e) {
-                        // error handling is done in context
-                      }
+                        setTestingKey(fullKey);
+                        setPage("Overview");
+                        setNotice(`Loaded full API key into tester. Running test...`);
+                        try {
+                            await testProtectedApi(fullKey);
+                        } catch (e) {
+                            // error handling is done in context
+                        }
                     } else {
-                      setTestingKey(key.key_prefix);
-                      setPage("Overview");
-                      setNotice(`Loaded key prefix "${key.key_prefix}" into tester. Full key not available – please paste it into the tester.`);
-                      // Do not auto‑run test because prefix is insufficient
+                        setTestingKey(key.key_prefix);
+                        setPage("Overview");
+                        setNotice(`Loaded key prefix "${key.key_prefix}" into tester. Full key not available – please paste it into the tester.`);
+                        // Do not auto‑run test because prefix is insufficient
                     }
                 }}
             />
