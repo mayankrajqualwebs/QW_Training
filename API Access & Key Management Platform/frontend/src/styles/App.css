@@ -997,8 +997,13 @@ td code {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .modal-backdrop {
@@ -1050,6 +1055,14 @@ td code {
 
 .modal-form>label:not(.scope-option) {
   margin: 5px 0 0;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
 }
 
 .field-help {
@@ -1143,8 +1156,15 @@ td code {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
 }
 
 .filter-bar {
@@ -1184,10 +1204,29 @@ td code {
   font-weight: 600;
 }
 
-.search-input {
+/* .search-input {
   max-width: 260px;
   min-height: 34px !important;
   font-size: 11px;
+  border-radius: 7px;
+} */
+
+.search-input {
+  max-width: 1000px;
+  min-height: 40px !important;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 7px;
+  padding: 6px 10px;
+  background-color: #fff;
+  outline: none;
+  box-shadow: none;
+}
+
+.search-input:focus {
+  border: 2px solid #888;
+  outline: none;
+  box-shadow: none;
 }
 
 .badge {
@@ -1376,6 +1415,38 @@ td code {
   display: flex;
   gap: 8px;
   margin-top: 14px;
+}
+
+.danger-button-main {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 9px 18px;
+  min-height: 36px;
+  border: 1px solid #dc3545;
+  border-radius: 6px;
+  background-color: #dc3545;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.danger-button-main:hover {
+  background-color: #bb2d3b;
+  border-color: #bb2d3b;
+}
+
+.danger-button-main:active {
+  background-color: #a52834;
+  transform: scale(0.98);
+}
+
+.danger-button-main:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 @media (max-width: 1150px) {
