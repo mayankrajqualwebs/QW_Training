@@ -351,7 +351,9 @@ export function WorkspaceProvider({ children }) {
             const res = await protectedApiService.test(projectId, keyToTest.trim());
             setTestResult(res);
             if (res.ok) {
-                setNotice(`API test returned HTTP ${res.status} in ${res.latencyMs}ms.`);
+                setNotice(
+                    `${res.data?.message || "API test completed"} in ${res.latencyMs}ms.`
+                );
             }
             if (organizationId && projectId) {
                 void loadSummary(organizationId, projectId, days);
