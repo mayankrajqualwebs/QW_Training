@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { AuthContext } from "./AuthContext";
 import { authService, hasSession, clearTokens } from "../services";
 
@@ -7,20 +7,44 @@ export function AuthProvider({ children }) {
     const [authLoading, setAuthLoading] = useState(hasSession());
     const [authMode, setAuthMode] = useState("login");
 
-    const restoreSession = useCallback(async () => {
+    const restorePromiseRef = useRef(null);
+
+    const restoreSession = useCallback(() => {
         if (!hasSession()) {
             setAuthLoading(false);
-            return;
+            return Promise.resolve(null);
         }
-        try {
-            const currentUser = await authService.me();
-            setUser(currentUser);
-        } catch {
-            clearTokens();
-            setUser(null);
-        } finally {
-            setAuthLoading(false);
+
+        // Reuse an ongoing session restoration request.
+        if (restorePromiseRef.current) {
+            return restorePromiseRef.current;
         }
+
+        const request = (async () => {
+            try {
+                const currentUser = await authService.me();
+                setUser(currentUser);
+                return currentUser;
+            } catch {
+                clearTokens();
+                setUser(null);
+                return null;
+            } finally {
+                setAuthLoading(false);
+            }
+        })();
+
+        restorePromiseRef.current = request;
+
+        const clearRequest = () => {
+            if (restorePromiseRef.current === request) {
+                restorePromiseRef.current = null;
+            }
+        };
+
+        request.then(clearRequest, clearRequest);
+
+        return request;
     }, []);
 
     useEffect(() => {

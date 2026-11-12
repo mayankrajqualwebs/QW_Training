@@ -3,6 +3,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
 } from "react";
 import { WorkspaceContext } from "./WorkspaceContext";
 import {
@@ -18,6 +19,9 @@ import Modal from "../components/Modal";
 
 export function WorkspaceProvider({ children }) {
     const { user } = useAuth();
+    const userId = user?.id;
+
+    const refreshPromiseRef = useRef(null);
 
     const [page, setPage] = useState("Overview");
     const [organizations, setOrganizations] = useState([]);
@@ -132,50 +136,47 @@ export function WorkspaceProvider({ children }) {
         return data;
     }, []);
 
-    const refreshWorkspace = useCallback(async () => {
-        if (!user) return;
-        setLoading(true);
-        setError("");
-        try {
-            const orgs = await organizationService.list();
-            setOrganizations(orgs);
-            const targetOrgId = orgs.some((item) => item.id === organizationId)
-                ? organizationId
-                : orgs[0]?.id ?? "";
-            setOrganizationId(targetOrgId);
+    const refreshWorkspace = useCallback(() => {
+        if (!userId) return Promise.resolve();
 
-            if (targetOrgId) {
-                const projs = await projectService.list(targetOrgId);
-                setProjects(projs);
-                const targetProjId = projs.some((item) => item.id === projectId)
-                    ? projectId
-                    : projs[0]?.id ?? "";
-                setProjectId(targetProjId);
-
-                if (targetProjId) {
-                    await Promise.all([
-                        apiKeyService.list(targetOrgId, targetProjId).then(setKeys),
-                        analyticsService
-                            .summary(targetOrgId, targetProjId, days)
-                            .then(setSummary),
-                    ]);
-                } else {
-                    setKeys([]);
-                    setSummary(null);
-                }
-            } else {
-                setProjects([]);
-                setProjectId("");
-                setKeys([]);
-                setSummary(null);
-            }
-            setNotice("Workspace refreshed.");
-        } catch (e) {
-            setError(errorMessage(e));
-        } finally {
-            setLoading(false);
+        // Reuse an existing request instead of sending another GET.
+        if (refreshPromiseRef.current) {
+            return refreshPromiseRef.current;
         }
-    }, [user, organizationId, projectId, days]);
+
+        const request = (async () => {
+            setLoading(true);
+            setError("");
+
+            try {
+                const orgs = await organizationService.list();
+
+                setOrganizations(orgs);
+
+                setOrganizationId((current) =>
+                    orgs.some((item) => item.id === current)
+                        ? current
+                        : orgs[0]?.id ?? ""
+                );
+
+                setNotice("Workspace refreshed.");
+            } catch (e) {
+                setError(errorMessage(e));
+            } finally {
+                setLoading(false);
+            }
+        })();
+
+        refreshPromiseRef.current = request;
+
+        request.finally(() => {
+            if (refreshPromiseRef.current === request) {
+                refreshPromiseRef.current = null;
+            }
+        });
+
+        return request;
+    }, [userId]);
 
     // Handle session expired event
     useEffect(() => {
@@ -195,7 +196,11 @@ export function WorkspaceProvider({ children }) {
 
     // Initial load when user changes
     useEffect(() => {
-        if (user) {
+        console.log("[DEBUG] Workspace initialization effect", {
+            userId,
+        });
+
+        if (userId) {
             void refreshWorkspace();
         } else {
             setOrganizations([]);
@@ -204,7 +209,7 @@ export function WorkspaceProvider({ children }) {
             setSummary(null);
             setPage("Overview");
         }
-    }, [user, refreshWorkspace]);
+    }, [userId, refreshWorkspace]);
 
     // React to organizationId changes
     useEffect(() => {
