@@ -227,7 +227,11 @@ export function WorkspaceProvider({ children }) {
 
     // React to projectId or days changes
     useEffect(() => {
-        if (!organizationId || !projectId) {
+        const isValidProject = projects.some(
+            (project) => project.id === projectId
+        );
+
+        if (!organizationId || !projectId || !isValidProject) {
             setKeys([]);
             setSummary(null);
             return;
@@ -240,7 +244,14 @@ export function WorkspaceProvider({ children }) {
         ])
             .catch((e) => setError(errorMessage(e)))
             .finally(() => setLoading(false));
-    }, [organizationId, projectId, days, loadKeys, loadSummary]);
+    }, [
+        organizationId,
+        projectId,
+        projects,
+        days,
+        loadKeys,
+        loadSummary
+    ]);
 
     // Actions
     const createOrganization = useCallback(async (data) => {
@@ -354,6 +365,16 @@ export function WorkspaceProvider({ children }) {
         }
     }, [projectId, organizationId, days, loadSummary]);
 
+    const selectOrganization = useCallback((orgId) => {
+        // Reset previous organization's data
+        setOrganizationId(orgId);
+        setProjects([]);
+        setProjectId("");
+        setKeys([]);
+        setSummary(null);
+        setError("");
+    }, []);
+
     return (
         <WorkspaceContext.Provider
             value={{
@@ -407,6 +428,7 @@ export function WorkspaceProvider({ children }) {
                 revokeKey,
                 handleRevokeClick,
                 testProtectedApi,
+                selectOrganization,
             }}
         >
             {children}
