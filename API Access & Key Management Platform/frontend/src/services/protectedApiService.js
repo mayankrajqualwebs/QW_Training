@@ -1,3 +1,4 @@
+
 import axios from "axios";
 import { BASE_URL } from "./api";
 
@@ -8,7 +9,7 @@ export const protectedApiService = {
 
         try {
             const response = await axios.get(
-                `${BASE_URL}/v1/projects/${projectId}/data`,
+                `${BASE_URL}/api-test/projects/${projectId}/data`,
                 {
                     headers: {
                         "X-API-Key": apiKey,
@@ -24,6 +25,7 @@ export const protectedApiService = {
                 latencyMs: Math.round(performance.now() - start),
                 ok: true,
             };
+
         } catch (err) {
             const latencyMs = Math.round(performance.now() - start);
 
@@ -41,4 +43,3 @@ export const protectedApiService = {
         }
     },
 };
-

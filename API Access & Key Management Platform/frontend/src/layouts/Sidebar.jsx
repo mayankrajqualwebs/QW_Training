@@ -10,7 +10,7 @@ export function Sidebar() {
         setPage,
         organizations,
         organizationId,
-        setOrganizationId,
+        selectOrganization,
         selectedOrganization,
         projects,
         activeKeys,
@@ -33,7 +33,7 @@ export function Sidebar() {
             <select
                 className="workspace-select"
                 value={organizationId}
-                onChange={(e) => setOrganizationId(e.target.value)}
+                onChange={(e) => selectOrganization(e.target.value)}
                 aria-label="Select organization"
             >
                 <option value="">Select organization</option>

@@ -19,6 +19,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routers.usage import api_test_router
+
 from app.api.routers import (
     analytics_router,
     api_keys_router,
@@ -95,6 +97,18 @@ async def log_api_requests(request, call_next):
     try:
         response = await call_next(request)
         status_code = response.status_code
+
+        # Preserve the original authentication result in RequestLog
+        test_result_status = response.headers.get(
+            "X-API-Test-Result"
+        )
+
+        if test_result_status:
+            try:
+                status_code = int(test_result_status)
+            except ValueError:
+                pass
+
         return response
 
     finally:
@@ -102,7 +116,7 @@ async def log_api_requests(request, call_next):
 
         # Match only the protected API route family: /v1/projects/{project_id}/data
         match = re.fullmatch(
-            r"/v1/projects/([^/]+)/data/?",
+            r"/(?:v1|api-test)/projects/([^/]+)/data/?",
             path,
         )
 
@@ -181,3 +195,4 @@ app.include_router(projects_router)        # /organizations/{org_id}/projects
 app.include_router(api_keys_router)        # /organizations/{org_id}/projects/{proj_id}/api-keys
 app.include_router(usage_router)           # /v1/projects/{proj_id}/data
 app.include_router(analytics_router)       # /organizations/{org_id}/projects/{proj_id}/analytics/summary
+app.include_router(api_test_router)
