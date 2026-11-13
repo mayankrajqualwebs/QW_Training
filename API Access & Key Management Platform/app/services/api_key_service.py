@@ -47,6 +47,7 @@ def to_api_key_response(key: ApiKey) -> ApiKeyResponse:
         id=key.id,
         name=key.name,
         key_prefix=key.keyPrefix,
+        key_suffix=getattr(key, "keySuffix", None),
         scopes=key.scopes,
         expires_at=key.expiresAt,
         last_used_at=key.lastUsedAt,
@@ -134,11 +135,13 @@ class ApiKeyService:
 
         raw_key = generate_api_key()
         key_hash = hash_api_key(raw_key)
-        key_prefix = raw_key[:16]
+        key_prefix = raw_key[:13]
+        key_suffix = raw_key[-3:]
 
         key = await self.api_key_repo.create(
             name=data.name,
             key_prefix=key_prefix,
+            key_suffix=key_suffix,
             key_hash=key_hash,
             scopes=data.scopes,
             project_id=project_id,
@@ -150,6 +153,7 @@ class ApiKeyService:
             id=key.id,
             name=key.name,
             key_prefix=key.keyPrefix,
+            key_suffix=getattr(key, "keySuffix", None) or key_suffix,
             api_key=raw_key,
             scopes=key.scopes,
             expires_at=key.expiresAt,
