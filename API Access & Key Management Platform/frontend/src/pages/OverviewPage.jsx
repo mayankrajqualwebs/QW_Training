@@ -24,6 +24,7 @@ export function OverviewPage() {
         setTestingKey,
         setPage,
         setShowKeyForm,
+        triggerScrollToTester,
     } = useWorkspace();
 
     const [showFullKeyModal, setShowFullKeyModal] = useState(false);
@@ -147,7 +148,10 @@ export function OverviewPage() {
                     <KeyList
                         keys={keys.slice(0, 5)}
                         onRevoke={handleRevokeClick}
-                        onSelectForTest={(k) => setTestingKey(k.key_prefix)}
+                        onSelectForTest={(k) => {
+                            setTestingKey(k.key_prefix);
+                            triggerScrollToTester?.();
+                        }}
                     />
 
                     {keys.length > 5 && (

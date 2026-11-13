@@ -99,7 +99,8 @@ model Project {
 model ApiKey {
   id          String    @id @default(cuid())
   name        String
-  keyPrefix   String    // Public prefix for UI identification (e.g. ak_live_3vK...)
+  keyPrefix   String    // Public prefix for UI identification (e.g. ak_live_p3Bg5...)
+  keySuffix   String?   // Public suffix for UI identification (e.g. last 3 characters: e2a)
   keyHash     String    @unique // SHA-256 hash of the secret (raw secret is never stored)
   scopes      String[]  // Array of granted permissions (e.g. ['data:read', 'data:write'])
   projectId   String

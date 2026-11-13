@@ -5,7 +5,8 @@ from pydantic import ValidationError
 from app.schemas.auth import RegisterRequest
 from app.schemas.organization import OrganizationCreate
 from app.schemas.project import ProjectCreate
-from app.schemas.api_key import ApiKeyCreate
+from app.schemas.api_key import ApiKeyCreate, ApiKeyCreatedResponse, ApiKeyResponse
+from datetime import datetime, timezone
 
 
 def test_registration_accepts_valid_email_and_password():
@@ -62,3 +63,33 @@ def test_api_key_requires_at_least_one_scope():
             name="Development Key",
             scopes=[],
         )
+
+
+def test_api_key_response_schemas_support_key_suffix():
+    now = datetime.now(timezone.utc)
+    res = ApiKeyResponse(
+        id="key_1",
+        name="Test Key",
+        key_prefix="ak_live_p3Bg5",
+        key_suffix="e2a",
+        scopes=["data:read"],
+        expires_at=None,
+        last_used_at=None,
+        revoked_at=None,
+        created_at=now,
+    )
+    assert res.key_prefix == "ak_live_p3Bg5"
+    assert res.key_suffix == "e2a"
+
+    created = ApiKeyCreatedResponse(
+        id="key_1",
+        name="Test Key",
+        key_prefix="ak_live_p3Bg5",
+        key_suffix="e2a",
+        api_key="ak_live_p3Bg5xxxxxxxxxxxxxxxe2a",
+        scopes=["data:read"],
+        expires_at=None,
+        created_at=now,
+    )
+    assert created.key_prefix == "ak_live_p3Bg5"
+    assert created.key_suffix == "e2a"

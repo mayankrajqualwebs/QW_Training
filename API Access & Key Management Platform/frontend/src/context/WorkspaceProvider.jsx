@@ -57,6 +57,15 @@ export function WorkspaceProvider({ children }) {
     const [testingKey, setTestingKey] = useState("");
     const [testResult, setTestResult] = useState(null);
     const [testLoading, setTestLoading] = useState(false);
+    const [shouldScrollToTester, setShouldScrollToTester] = useState(false);
+
+    const triggerScrollToTester = useCallback(() => {
+        setShouldScrollToTester(true);
+    }, []);
+
+    const consumeScrollToTester = useCallback(() => {
+        setShouldScrollToTester(false);
+    }, []);
 
     const selectedOrganization = useMemo(
         () => organizations.find((item) => item.id === organizationId),
@@ -86,7 +95,8 @@ export function WorkspaceProvider({ children }) {
                 const q = keySearch.toLowerCase();
                 return (
                     key.name.toLowerCase().includes(q) ||
-                    key.key_prefix.toLowerCase().includes(q)
+                    key.key_prefix.toLowerCase().includes(q) ||
+                    (key.key_suffix && key.key_suffix.toLowerCase().includes(q))
                 );
             }
             return true;
@@ -419,6 +429,9 @@ export function WorkspaceProvider({ children }) {
                 testResult,
                 setTestResult,
                 testLoading,
+                shouldScrollToTester,
+                triggerScrollToTester,
+                consumeScrollToTester,
                 loadOrganizations,
                 loadProjects,
                 loadKeys,

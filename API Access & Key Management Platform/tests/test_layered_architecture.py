@@ -193,6 +193,56 @@ async def test_api_key_service_rejects_duplicate_scopes():
 
 
 @pytest.mark.asyncio
+async def test_api_key_service_stores_prefix_and_suffix():
+    mock_api_key_repo = MagicMock()
+    mock_membership_repo = MagicMock()
+    mock_project_repo = MagicMock()
+
+    mock_membership_repo.get_by_user_and_org = AsyncMock(
+        return_value=MagicMock(role="ADMIN")
+    )
+    mock_project_repo.get_by_id = AsyncMock(
+        return_value=MagicMock(organizationId="org_1")
+    )
+
+    async def mock_create(**kwargs):
+        rec = MagicMock()
+        rec.id = "key_123"
+        rec.name = kwargs["name"]
+        rec.keyPrefix = kwargs["key_prefix"]
+        rec.keySuffix = kwargs["key_suffix"]
+        rec.scopes = kwargs["scopes"]
+        rec.expiresAt = kwargs.get("expires_at")
+        rec.lastUsedAt = None
+        rec.revokedAt = None
+        rec.createdAt = datetime.now(timezone.utc)
+        return rec
+
+    mock_api_key_repo.create = AsyncMock(side_effect=mock_create)
+
+    service = ApiKeyService(
+        api_key_repo=mock_api_key_repo,
+        membership_repo=mock_membership_repo,
+        project_repo=mock_project_repo,
+    )
+
+    result = await service.create_api_key(
+        organization_id="org_1",
+        project_id="proj_1",
+        data=ApiKeyCreate(name="Production Key", scopes=["data:read"]),
+        user_id="user_1",
+    )
+
+    assert result.key_prefix.startswith("ak_live_")
+    assert len(result.key_prefix) == 13
+    assert len(result.key_suffix) == 3
+    assert result.api_key.startswith(result.key_prefix)
+    assert result.api_key.endswith(result.key_suffix)
+    assert mock_api_key_repo.create.call_args.kwargs["key_prefix"] == result.key_prefix
+    assert mock_api_key_repo.create.call_args.kwargs["key_suffix"] == result.key_suffix
+
+
+@pytest.mark.asyncio
 async def test_api_key_controller_translates_validation_to_422():
     mock_service = MagicMock()
     mock_service.create_api_key = AsyncMock(

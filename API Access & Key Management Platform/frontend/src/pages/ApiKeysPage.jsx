@@ -19,6 +19,8 @@ export function ApiKeysPage() {
         setPage,
         setNotice,
         handleRevokeClick,
+        testProtectedApi,
+        triggerScrollToTester,
     } = useWorkspace();
 
     return (
@@ -81,6 +83,7 @@ export function ApiKeysPage() {
                     if (fullKey) {
                         setTestingKey(fullKey);
                         setPage("Overview");
+                        triggerScrollToTester?.();
                         setNotice(`Loaded full API key into tester. Running test...`);
                         try {
                             await testProtectedApi(fullKey);
@@ -90,6 +93,7 @@ export function ApiKeysPage() {
                     } else {
                         setTestingKey(key.key_prefix);
                         setPage("Overview");
+                        triggerScrollToTester?.();
                         setNotice(`Loaded key prefix "${key.key_prefix}" into tester. Full key not available – please paste it into the tester.`);
                         // Do not auto‑run test because prefix is insufficient
                     }

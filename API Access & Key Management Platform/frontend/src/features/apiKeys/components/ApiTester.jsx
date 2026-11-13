@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Copy } from "lucide-react";
 import { useWorkspace } from "../../../hooks/useWorkspace";
 import { useClipboard } from "../../../hooks/useClipboard";
@@ -11,8 +12,39 @@ export function ApiTester() {
         testLoading,
         testProtectedApi,
         setNotice,
+        shouldScrollToTester,
+        consumeScrollToTester,
     } = useWorkspace();
     const { copiedText, copyToClipboard } = useClipboard();
+    const testerRef = useRef(null);
+    const inputRef = useRef(null);
+
+    useEffect(() => {
+        if (!shouldScrollToTester) return;
+
+        let cancelled = false;
+        const scrollToTarget = () => {
+            const target = testerRef.current || document.querySelector(".panel.protected-test");
+            if (target) {
+                target.scrollIntoView({ behavior: "smooth", block: "start" });
+                inputRef.current?.focus();
+                consumeScrollToTester?.();
+            } else if (!cancelled) {
+                requestAnimationFrame(scrollToTarget);
+            }
+        };
+
+        const timer = setTimeout(() => {
+            if (!cancelled) {
+                scrollToTarget();
+            }
+        }, 100);
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [shouldScrollToTester, consumeScrollToTester]);
 
     async function handleTest(event) {
         event.preventDefault();
@@ -20,7 +52,7 @@ export function ApiTester() {
     }
 
     return (
-        <section className="panel protected-test">
+        <section ref={testerRef} id="protected-test" className="panel protected-test">
             <div className="panel-heading">
                 <div>
                     <h2>Interactive API Test Console</h2>
@@ -35,6 +67,7 @@ export function ApiTester() {
             </code>
             <form className="inline-form" onSubmit={handleTest}>
                 <input
+                    ref={inputRef}
                     value={testingKey}
                     onChange={(e) => setTestingKey(e.target.value)}
                     placeholder="Enter or paste API key (e.g. ak_live_...)"

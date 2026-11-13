@@ -4,7 +4,7 @@ import { useWorkspace } from "../../../hooks/useWorkspace";
 import { useClipboard } from "../../../hooks/useClipboard";
 
 export function CreatedKeyModal({ createdKey, onClose }) {
-    const { setTestingKey, setPage, setNotice } = useWorkspace();
+    const { setTestingKey, setPage, setNotice, triggerScrollToTester } = useWorkspace();
     const { copyToClipboard } = useClipboard();
 
     if (!createdKey) return null;
@@ -38,6 +38,7 @@ export function CreatedKeyModal({ createdKey, onClose }) {
                         setTestingKey(createdKey.api_key);
                         onClose();
                         setPage("Overview");
+                        triggerScrollToTester?.();
                         setNotice("API key loaded into Interactive Test Console.");
                     }}
                 >

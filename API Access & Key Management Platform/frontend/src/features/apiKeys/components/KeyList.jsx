@@ -27,7 +27,7 @@ export function KeyList({
                             </span>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <code>{key.key_prefix}••••••••</code>
+                            <code>{key.key_prefix}••••••••{key.key_suffix || ""}</code>
                             <button
                                 className="icon-button"
                                 style={{ width: 22, height: 22 }}

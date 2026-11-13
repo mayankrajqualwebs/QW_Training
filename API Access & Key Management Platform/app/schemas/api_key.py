@@ -41,6 +41,7 @@ class ApiKeyCreatedResponse(BaseModel):
     id: str
     name: str
     key_prefix: str
+    key_suffix: str | None = None
     api_key: str  # The full plaintext secret (only exposed at creation time)
     scopes: list[str]
     expires_at: datetime | None
@@ -56,7 +57,8 @@ class ApiKeyResponse(BaseModel):
     """
     id: str
     name: str
-    key_prefix: str  # Only the public prefix (e.g. ak_live_1234...) is displayed
+    key_prefix: str  # Only the public prefix (e.g. ak_live_p3Bg5...) is displayed
+    key_suffix: str | None = None  # The public suffix (e.g. last 3 chars: e2a)
     scopes: list[str]
     expires_at: datetime | None
     last_used_at: datetime | None

@@ -30,12 +30,14 @@ class ApiKeyRepository:
         project_id: str,
         created_by_id: str,
         expires_at: Optional[datetime] = None,
+        key_suffix: Optional[str] = None,
     ) -> ApiKey:
         """Create and persist a new hashed API key record."""
         return await prisma.apikey.create(
             data={
                 "name": name,
                 "keyPrefix": key_prefix,
+                "keySuffix": key_suffix,
                 "keyHash": key_hash,
                 "scopes": scopes,
                 "projectId": project_id,
