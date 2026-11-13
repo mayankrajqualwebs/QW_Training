@@ -131,11 +131,13 @@ async def log_api_requests(request, call_next):
                 if project is not None:
                     raw_key = request.headers.get("X-API-Key")
 
-                    # Look up the API key ID by its hash (never store the raw key)
+                    # Look up the API key ID by its id or its hash (never store the raw key)
                     if raw_key:
-                        key = await api_key_repository.get_by_hash(
-                            hash_api_key(raw_key)
-                        )
+                        key = await api_key_repository.get_by_id(raw_key)
+                        if key is None:
+                            key = await api_key_repository.get_by_hash(
+                                hash_api_key(raw_key)
+                            )
 
                         # Associate only if the key belongs to this project
                         if (

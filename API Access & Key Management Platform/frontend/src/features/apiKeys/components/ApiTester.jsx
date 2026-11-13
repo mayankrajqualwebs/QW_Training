@@ -70,7 +70,7 @@ export function ApiTester() {
                     ref={inputRef}
                     value={testingKey}
                     onChange={(e) => setTestingKey(e.target.value)}
-                    placeholder="Enter or paste API key (e.g. ak_live_...)"
+                    placeholder="Enter or paste API Key ID or secret..."
                     required
                 />
                 <button
@@ -87,14 +87,16 @@ export function ApiTester() {
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             <span
                                 className={`status-badge ${
-                                    testResult.status < 300
-                                        ? "status-2xx"
-                                        : testResult.status < 500
+                                    testResult.data?.success === false
                                         ? "status-4xx"
-                                        : "status-5xx"
+                                        : testResult.status < 300
+                                        ? "status-2xx"
+                                        : "status-4xx"
                                 }`}
                             >
-                                HTTP {testResult.status} {testResult.statusText}
+                                {testResult.data?.status
+                                    ? `STATUS: ${testResult.data.status.toUpperCase()}`
+                                    : `HTTP ${testResult.status} ${testResult.statusText}`}
                             </span>
                             <span className="latency-badge">{testResult.latencyMs}ms</span>
                         </div>

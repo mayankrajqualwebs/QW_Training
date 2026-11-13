@@ -149,8 +149,9 @@ export function OverviewPage() {
                         keys={keys.slice(0, 5)}
                         onRevoke={handleRevokeClick}
                         onSelectForTest={(k) => {
-                            setTestingKey(k.key_prefix);
+                            setTestingKey(k.id);
                             triggerScrollToTester?.();
+                            setNotice(`Loaded API key "${k.name}" (ID: ${k.id}) into tester.`);
                         }}
                     />
 

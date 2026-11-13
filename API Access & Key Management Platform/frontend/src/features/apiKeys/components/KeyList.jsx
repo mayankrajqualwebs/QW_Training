@@ -53,7 +53,7 @@ export function KeyList({
                         )}
                     </div>
                     <div className="key-actions">
-                        {onSelectForTest && !key.revoked_at && (
+                        {onSelectForTest && (
                             <button
                                 className="secondary-button compact"
                                 title="Use in API Tester"

@@ -315,3 +315,101 @@ async def test_analytics_service_computes_correct_statistics():
     assert summary.average_latency_ms == 200.0
     assert summary.error_rate_percent == round(1 / 3 * 100, 2)
     assert summary.status_code_breakdown == {"200": 2, "500": 1}
+
+
+# ==============================================================================
+# API Test Console Verification Tests
+# ==============================================================================
+
+@pytest.mark.asyncio
+async def test_api_test_console_responses(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.repositories.api_key_repository import api_key_repository
+
+    test_client = TestClient(app)
+
+    # 1. Correct key ID
+    active_key = MagicMock(
+        id="key_valid_123",
+        name="Test Key",
+        projectId="proj_1",
+        scopes=["data:read"],
+        revokedAt=None,
+        expiresAt=None,
+    )
+    # 2. Revoked key
+    revoked_key = MagicMock(
+        id="key_revoked_456",
+        name="Revoked Key",
+        projectId="proj_1",
+        scopes=["data:read"],
+        revokedAt=datetime.now(timezone.utc),
+        expiresAt=None,
+    )
+    # 3. Different project key
+    other_project_key = MagicMock(
+        id="key_other_789",
+        name="Other Project Key",
+        projectId="proj_OTHER",
+        scopes=["data:read"],
+        revokedAt=None,
+        expiresAt=None,
+    )
+
+    async def mock_get_by_id(key_id):
+        if key_id == "key_valid_123":
+            return active_key
+        elif key_id == "key_revoked_456":
+            return revoked_key
+        elif key_id == "key_other_789":
+            return other_project_key
+        return None
+
+    monkeypatch.setattr(api_key_repository, "get_by_id", mock_get_by_id)
+    monkeypatch.setattr(api_key_repository, "get_by_hash", AsyncMock(return_value=None))
+    monkeypatch.setattr(api_key_repository, "update_last_used", AsyncMock(return_value=None))
+
+    # Test Correct Key ID
+    res = test_client.get(
+        "/api-test/projects/proj_1/data",
+        headers={"X-API-Key": "key_valid_123"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is True
+    assert data["status"] == "authorized"
+    assert "authenticated successfully" in data["message"]
+
+    # Test Revoked Key ID
+    res = test_client.get(
+        "/api-test/projects/proj_1/data",
+        headers={"X-API-Key": "key_revoked_456"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is False
+    assert data["status"] == "unauthorized"
+    assert "revoked" in data["message"].lower()
+
+    # Test Different Project Key ID
+    res = test_client.get(
+        "/api-test/projects/proj_1/data",
+        headers={"X-API-Key": "key_other_789"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is False
+    assert data["status"] == "forbidden"
+    assert "different project" in data["message"].lower()
+
+    # Test Incorrect Key ID (not found in db)
+    res = test_client.get(
+        "/api-test/projects/proj_1/data",
+        headers={"X-API-Key": "key_nonexistent"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is False
+    assert data["status"] == "unauthorized"
+    assert "not found in database" in data["message"].lower()
