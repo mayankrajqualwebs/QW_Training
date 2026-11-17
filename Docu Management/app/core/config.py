@@ -2,9 +2,6 @@
 Application Configuration
 =========================
 Loads environment variables and application settings using Pydantic Settings.
-
-Reads configuration values from the root `.env` file with fallback defaults.
-Ensures critical secrets like DATABASE_URL and JWT_SECRET are present at startup.
 """
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -21,15 +18,20 @@ class Settings(BaseSettings):
     APP_VERSION: str = "0.1.0"
     DEBUG: bool = False
 
-    # PostgreSQL connection string for Prisma ORM
+    # PostgreSQL connection
     DATABASE_URL: str
 
-    # Secret key used for signing and verifying HMAC-SHA256 JWT access tokens
+    # JWT Authentication
     JWT_SECRET: str
 
-    # Token expiration lifetimes
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15  # Short-lived access token for stateless auth
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7     # Long-lived refresh token stored hashed in DB
+    # Token expiration
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # AWS S3 Configuration
+    AWS_REGION: str | None = None
+    AWS_S3_BUCKET: str | None = None
+    AWS_PROFILE: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -38,5 +40,5 @@ class Settings(BaseSettings):
     )
 
 
-# Singleton settings instance accessed throughout the backend
+# Singleton settings instance
 settings = Settings()
