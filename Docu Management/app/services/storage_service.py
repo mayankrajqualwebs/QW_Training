@@ -1,4 +1,3 @@
-
 """
 Storage Service
 ===============
@@ -107,6 +106,30 @@ class StorageService:
             "last_modified": response.get("LastModified"),
             "etag": response.get("ETag"),
         }
+
+    def rename_file(
+        self,
+        old_object_key: str,
+        new_object_key: str,
+    ) -> None:
+        """
+        Rename an S3 object by copying it to a new key
+        and deleting the original object.
+        """
+
+        s3_client.copy_object(
+            Bucket=self.bucket,
+            CopySource={
+                "Bucket": self.bucket,
+                "Key": old_object_key,
+            },
+            Key=new_object_key,
+        )
+
+        s3_client.delete_object(
+            Bucket=self.bucket,
+            Key=old_object_key,
+        )   
 
 
 # Shared service instance
