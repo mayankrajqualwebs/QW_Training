@@ -19,5 +19,6 @@ export * from "./apiKeyService";
 export * from "./analyticsService";
 export * from "./healthService";
 export * from "./protectedApiService";
+export * from "./fileService";
 
 export { errorMessage } from "../utils/error";
