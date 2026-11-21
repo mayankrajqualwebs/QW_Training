@@ -3,7 +3,7 @@
 // Client: prisma-client-py
 
 generator client {
-  provider = "prisma-client-py"
+  provider = "python -m prisma"
 }
 
 datasource db {
@@ -15,10 +15,15 @@ datasource db {
 // Membership Roles
 // -----------------------------------------------------------------------------
 enum MembershipRole {
-  OWNER      // Full control: delete org, manage billing, members, and keys
-  ADMIN      // Operational control: manage members, projects, and all keys
-  DEVELOPER  // Standard engineer: create projects and create/manage own keys
-  VIEWER     // Read-only access to analytics and dashboard
+  OWNER // Full control: delete org, manage billing, members, and keys
+  ADMIN // Operational control: manage members, projects, and all keys
+  DEVELOPER // Standard engineer: create projects and create/manage own keys
+  VIEWER // Read-only access to analytics and dashboard
+}
+
+enum FileStatus {
+  PENDING
+  UPLOADED
 }
 
 // -----------------------------------------------------------------------------
@@ -36,6 +41,7 @@ model User {
   createdOrganizations Organization[] @relation("OrganizationCreator")
   refreshTokens        RefreshToken[]
   createdApiKeys       ApiKey[]       @relation("ApiKeyCreator")
+  uploadedFiles        ProjectFile[]  @relation("FileUploader")
 }
 
 // -----------------------------------------------------------------------------
@@ -50,7 +56,7 @@ model Organization {
   updatedAt   DateTime @updatedAt
 
   // Relationships
-  createdBy  User         @relation("OrganizationCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  createdBy   User         @relation("OrganizationCreator", fields: [createdById], references: [id], onDelete: Restrict)
   memberships Membership[]
   projects    Project[]
 }
@@ -85,9 +91,10 @@ model Project {
   updatedAt      DateTime @updatedAt
 
   // Relationships
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   apiKeys      ApiKey[]
   requestLogs  RequestLog[]
+  files        ProjectFile[]
 
   @@unique([organizationId, slug])
   @@index([organizationId])
@@ -99,10 +106,10 @@ model Project {
 model ApiKey {
   id          String    @id @default(cuid())
   name        String
-  keyPrefix   String    // Public prefix for UI identification (e.g. ak_live_p3Bg5...)
-  keySuffix   String?   // Public suffix for UI identification (e.g. last 3 characters: e2a)
+  keyPrefix   String // Public prefix for UI identification (e.g. ak_live_p3Bg5...)
+  keySuffix   String? // Public suffix for UI identification (e.g. last 3 characters: e2a)
   keyHash     String    @unique // SHA-256 hash of the secret (raw secret is never stored)
-  scopes      String[]  // Array of granted permissions (e.g. ['data:read', 'data:write'])
+  scopes      String[] // Array of granted permissions (e.g. ['data:read', 'data:write'])
   projectId   String
   createdById String
   expiresAt   DateTime? // Optional automatic expiration timestamp
@@ -142,11 +149,11 @@ model RefreshToken {
 model RequestLog {
   id         String   @id @default(cuid())
   projectId  String
-  apiKeyId   String?  // Nullable if request was made without an identifiable key
-  method     String   // HTTP Method (GET, POST, etc.)
-  path       String   // Requested URL path
-  statusCode Int      // HTTP Response Status (200, 401, 429, etc.)
-  latencyMs  Int      // High-resolution processing duration in milliseconds
+  apiKeyId   String? // Nullable if request was made without an identifiable key
+  method     String // HTTP Method (GET, POST, etc.)
+  path       String // Requested URL path
+  statusCode Int // HTTP Response Status (200, 401, 429, etc.)
+  latencyMs  Int // High-resolution processing duration in milliseconds
   ipAddress  String?
   createdAt  DateTime @default(now())
 
@@ -157,4 +164,31 @@ model RequestLog {
   @@index([projectId, createdAt])
   @@index([apiKeyId, createdAt])
   @@index([statusCode, createdAt])
+}
+
+// -----------------------------------------------------------------------------
+// ProjectFile (Files stored in AWS S3)
+// -----------------------------------------------------------------------------
+model ProjectFile {
+  id           String     @id @default(cuid())
+  name         String // Display name; can be changed when renaming
+  originalName String // Original uploaded filename
+  objectKey    String     @unique // Unique AWS S3 object key
+  contentType  String // MIME type (application/pdf, image/png, etc.)
+  size         BigInt // File size in bytes
+  status       FileStatus @default(PENDING)
+
+  projectId    String
+  uploadedById String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploadedBy User    @relation("FileUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([projectId, createdAt])
+  @@index([uploadedById, createdAt])
+  @@index([status])
 }

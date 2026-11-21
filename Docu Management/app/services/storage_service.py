@@ -1,4 +1,3 @@
-
 """
 Storage Service
 ===============
@@ -107,6 +106,50 @@ class StorageService:
             "last_modified": response.get("LastModified"),
             "etag": response.get("ETag"),
         }
+
+    def rename_file(
+        self,
+        old_object_key: str,
+        new_object_key: str,
+    ) -> None:
+        """
+        Rename an S3 object by copying it to a new key
+        and verifying deletion of the original.
+        """
+
+        # Step 1: Copy old object to new key
+        s3_client.copy_object(
+            Bucket=self.bucket,
+            CopySource={
+                "Bucket": self.bucket,
+                "Key": old_object_key,
+            },
+            Key=new_object_key,
+        )
+
+        # Step 2: Delete old object
+        s3_client.delete_object(
+            Bucket=self.bucket,
+            Key=old_object_key,
+        )
+
+        # Step 3: Verify old object is deleted
+        try:
+            s3_client.head_object(
+                Bucket=self.bucket,
+                Key=old_object_key,
+            )
+        except s3_client.exceptions.ClientError as error:
+            status_code = error.response["ResponseMetadata"]["HTTPStatusCode"]
+
+            if status_code == 404:
+                return
+
+            raise
+
+        raise RuntimeError(
+            f"Old S3 object still exists: {old_object_key}"
+        )   
 
 
 # Shared service instance
