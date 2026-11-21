@@ -3,7 +3,7 @@
 // Client: prisma-client-py
 
 generator client {
-  provider = "prisma-client-py"
+  provider = "python -m prisma"
 }
 
 datasource db {
