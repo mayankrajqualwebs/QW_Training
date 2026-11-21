@@ -4,6 +4,7 @@ import { ProjectsPage } from "../pages/ProjectsPage";
 import { ApiKeysPage } from "../pages/ApiKeysPage";
 import { AnalyticsPage } from "../pages/AnalyticsPage";
 import { SettingsPage } from "../pages/SettingsPage";
+import { FilesPage } from "../pages/FilesPage";
 
 export function AppRoutes() {
     const { page } = useWorkspace();
@@ -13,6 +14,8 @@ export function AppRoutes() {
             return <OverviewPage />;
         case "Projects":
             return <ProjectsPage />;
+        case "Files":
+            return <FilesPage />;
         case "API Keys":
             return <ApiKeysPage />;
         case "Analytics":
