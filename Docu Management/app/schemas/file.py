@@ -9,12 +9,18 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 
+
 class FileUploadRequest(BaseModel):
     """Request data required to initiate a file upload."""
 
     name: str = Field(min_length=1, max_length=255)
     content_type: str = Field(min_length=1, max_length=150)
-    size: int = Field(gt=0)
+    size: int = Field(
+        gt=0,
+        le=10 * 1024 * 1024,
+        description="Maximum allowed file size is 10 MB.",
+    )
+
 
 
 class FileUploadResponse(BaseModel):

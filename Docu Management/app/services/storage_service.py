@@ -16,6 +16,8 @@ from botocore.exceptions import ClientError
 from app.core.aws import s3_client
 from app.core.config import settings
 
+from io import BytesIO
+from zipfile import ZipFile, BadZipFile
 
 class StorageService:
     """Handles AWS S3 object storage operations."""
@@ -150,6 +152,18 @@ class StorageService:
         raise RuntimeError(
             f"Old S3 object still exists: {old_object_key}"
         )   
+
+    
+    def get_file_content(self, object_key: str) -> bytes:
+        """Retrieve the actual contents of an S3 object."""
+
+        response = s3_client.get_object(
+            Bucket=self.bucket,
+            Key=object_key,
+        )
+
+        return response["Body"].read()
+
 
 
 # Shared service instance

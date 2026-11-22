@@ -17,6 +17,9 @@ import re
 from uuid import uuid4
 from typing import Set
 
+from io import BytesIO
+from zipfile import ZipFile, BadZipFile
+
 from app.repositories.file_repository import (
     FileRepository,
     file_repository,
@@ -49,6 +52,13 @@ from app.services.exceptions import (
 # File permission policies
 FILE_UPLOAD_ROLES: Set[str] = {"OWNER", "ADMIN", "DEVELOPER"}
 FILE_ADMIN_ROLES: Set[str] = {"OWNER", "ADMIN"}
+
+
+# Supported document formats
+ALLOWED_FILE_TYPES = {
+    ".pdf": "application/pdf",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
 
 
 class FileService:
@@ -184,6 +194,25 @@ class FileService:
         if not safe_name:
             raise ValidationError("Invalid filename")
 
+        
+        # Validate file extension and MIME type.
+        extension = "." + safe_name.rsplit(".", 1)[-1].lower() if "." in safe_name else ""
+
+        expected_content_type = ALLOWED_FILE_TYPES.get(extension)
+
+        if expected_content_type is None:
+            raise ValidationError(
+                "Unsupported file format. Only PDF and DOCX files are allowed."
+            )
+
+        content_type = data.content_type.strip().lower()
+
+        if content_type != expected_content_type:
+            raise ValidationError(
+                "File extension does not match the provided content type."
+            )
+
+
         # Generate a unique storage path.
         object_key = (
             f"organizations/{project.organizationId}/"
@@ -196,7 +225,7 @@ class FileService:
             name=original_name,
             original_name=original_name,
             object_key=object_key,
-            content_type=data.content_type,
+            content_type=content_type,          
             size=data.size,
             project_id=project_id,
             uploaded_by_id=user_id,
@@ -228,6 +257,7 @@ class FileService:
     # Upload Verification
     # ---------------------------------------------------------
 
+    
     async def verify_upload(
         self,
         file_id: str,
@@ -235,7 +265,7 @@ class FileService:
     ):
         """
         Verify that the uploaded object exists in S3 and
-        matches the expected size and content type.
+        matches the expected size, content type, and file format.
         """
 
         file, _, membership = await self.verify_file_access(
@@ -266,19 +296,31 @@ class FileService:
         metadata = self.storage.get_file_metadata(file.objectKey)
 
         if metadata["file_size"] != int(file.size):
-            raise ValidationError(
-                "Uploaded file size does not match the expected size"
+            await self.reject_upload(
+                file,
+                "Uploaded file size does not match the expected size",
             )
 
         if metadata["content_type"] != file.contentType:
-            raise ValidationError(
-                "Uploaded file content type does not match"
+            await self.reject_upload(
+                file,
+                "Uploaded file content type does not match",
+            )
+
+        # Validate actual file contents.
+        content = self.storage.get_file_content(file.objectKey)
+
+        if not self.validate_file_content(file.name, content):
+            await self.reject_upload(
+                file,
+                "Uploaded file content does not match the expected file format",
             )
 
         return await self.file_repo.update_file(
             file_id=file.id,
             data={"status": "UPLOADED"},
         )
+
 
     # ---------------------------------------------------------
     # Retrieve
@@ -475,6 +517,51 @@ class FileService:
             raise ServiceUnavailableError(
                 "Unable to delete file"
             ) from error
+
+    
+    def validate_file_content(self, file_name: str, content: bytes) -> bool:
+        """Validate actual file contents using file signatures."""
+
+        extension = "." + file_name.rsplit(".", 1)[-1].lower()
+
+        # PDF signature validation
+        if extension == ".pdf":
+            return content.startswith(b"%PDF-")
+
+        # DOCX validation (ZIP-based Office document)
+        if extension == ".docx":
+            try:
+                with ZipFile(BytesIO(content)) as archive:
+                    required_files = {
+                        "[Content_Types].xml",
+                        "word/document.xml",
+                    }
+
+                    return required_files.issubset(
+                        set(archive.namelist())
+                    )
+
+            except BadZipFile:
+                return False
+
+        return False
+
+        
+    async def reject_upload(self, file, message: str):
+        """Remove an invalid uploaded object and its pending record."""
+
+        try:
+            self.storage.delete_file(file.objectKey)
+            await self.file_repo.delete_file(file.id)
+
+        except Exception as error:
+            raise ServiceUnavailableError(
+                "Unable to clean up invalid uploaded file"
+            ) from error
+
+        raise ValidationError(message)
+
+
 
 
 # Shared service instance
