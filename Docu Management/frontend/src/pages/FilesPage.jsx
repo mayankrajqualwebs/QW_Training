@@ -5,6 +5,7 @@ import { useWorkspace } from "../hooks/useWorkspace";
 import { fileService } from "../services";
 import { errorMessage } from "../utils/error";
 import { EmptyMessage } from "../components/EmptyMessage";
+import { FileUpload } from "../features/files/components/FileUpload";
 
 export function FilesPage() {
     const { projectId, selectedProject } = useWorkspace();
@@ -46,6 +47,12 @@ export function FilesPage() {
     return (
         <section className="panel">
             <div className="panel-heading">
+                {projectId && (
+                    <FileUpload
+                        projectId={projectId}
+                        onUploadComplete={loadFiles}
+                    />
+                )}
                 <div>
                     <h2>File Management</h2>
                     <p>
