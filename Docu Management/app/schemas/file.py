@@ -61,3 +61,37 @@ class FileRenameRequest(BaseModel):
     """Request data for renaming a file."""
 
     new_name: str = Field(min_length=1, max_length=255)
+
+
+class FileVersionUploadRequest(BaseModel):
+    """Request data for uploading a new document version."""
+
+    content_type: str = Field(min_length=1, max_length=150)
+    size: int = Field(
+        gt=0,
+        le=10 * 1024 * 1024,
+        description="Maximum allowed file size is 10 MB.",
+    )
+
+
+class FileVersionUploadResponse(BaseModel):
+    """Response containing temporary upload URL and version information."""
+
+    file_id: str
+    version_number: int
+    object_key: str
+    upload_url: str
+    expires_in: int
+
+
+class FileVersionResponse(BaseModel):
+    """Information about an individual file version."""
+
+    id: str
+    versionNumber: int
+    contentType: str
+    size: int
+    uploadedById: str
+    createdAt: datetime
+
+    model_config = ConfigDict(from_attributes=True)

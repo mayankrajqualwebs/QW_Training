@@ -72,6 +72,77 @@ class FileRepository:
             where={"id": file_id}
         )
 
+    
+    async def create_file_version(
+        self,
+        file_id: str,
+        version_number: int,
+        object_key: str,
+        content_type: str,
+        size: int,
+        uploaded_by_id: str,
+    ):
+        """Create a new version record for a file."""
+
+        return await prisma.fileversion.create(
+            data={
+                "fileId": file_id,
+                "versionNumber": version_number,
+                "objectKey": object_key,
+                "contentType": content_type,
+                "size": size,
+                "uploadedById": uploaded_by_id,
+            }
+        )
+
+    async def list_file_versions(self, file_id: str):
+        """Retrieve all versions of a file."""
+
+        return await prisma.fileversion.find_many(
+            where={"fileId": file_id},
+            order={"versionNumber": "desc"},
+        )
+
+    async def get_file_version(
+        self,
+        file_id: str,
+        version_number: int,
+    ):
+        """Retrieve a specific version of a file."""
+
+        return await prisma.fileversion.find_first(
+            where={
+                "fileId": file_id,
+                "versionNumber": version_number,
+            }
+        )
+
+
+    async def backfill_file_versions(self):
+        """Create version 1 records for existing uploaded files."""
+
+        files = await prisma.projectfile.find_many(
+            where={
+                "status": "UPLOADED",
+                "versions": {
+                    "none": {},
+                },
+            }
+        )
+
+        for file in files:
+            await self.create_file_version(
+                file_id=file.id,
+                version_number=1,
+                object_key=file.objectKey,
+                content_type=file.contentType,
+                size=int(file.size),
+                uploaded_by_id=file.uploadedById,
+            )
+
+        return len(files)
+
+
 
 # Shared repository instance
 file_repository = FileRepository()

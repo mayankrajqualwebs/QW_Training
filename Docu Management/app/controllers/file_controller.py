@@ -13,6 +13,8 @@ from app.schemas.file import (
     FileUploadRequest,
     FileUploadResponse,
     FileDownloadResponse,
+    FileVersionUploadRequest,
+    FileVersionUploadResponse,
 )
 from app.services.file_service import FileService, file_service
 from app.services.exceptions import (
@@ -58,28 +60,6 @@ class FileController:
         )
 
     # ---------------------------------------------------------
-    # Upload
-    # ---------------------------------------------------------
-
-    async def upload_file(
-        self,
-        project_id: str,
-        data: FileUploadRequest,
-        user: Any,
-    ) -> FileUploadResponse:
-        """Initiate a file upload."""
-
-        try:
-            return await self.service.upload_file(
-                project_id=project_id,
-                user_id=user.id,
-                data=data,
-            )
-
-        except ServiceError as exc:
-            self._handle_service_error(exc)
-
-    # ---------------------------------------------------------
     # Upload Verification
     # ---------------------------------------------------------
 
@@ -98,6 +78,97 @@ class FileController:
 
         except ServiceError as exc:
             self._handle_service_error(exc)
+
+    # ---------------------------------------------------------
+    # Version Upload
+    # ---------------------------------------------------------
+
+    async def initiate_version_upload(
+        self,
+        file_id: str,
+        data: FileVersionUploadRequest,
+        user: Any,
+    ) -> FileVersionUploadResponse:
+        """Initiate a new version upload."""
+
+        try:
+            return await self.service.initiate_version_upload(
+                file_id=file_id,
+                user_id=user.id,
+                data=data,
+            )
+
+        except ServiceError as exc:
+            self._handle_service_error(exc)
+
+    async def verify_version_upload(
+        self,
+        file_id: str,
+        version_number: int,
+        data: FileVersionUploadRequest,
+        user: Any,
+    ):
+        """Verify a completed version upload."""
+
+        try:
+            return await self.service.verify_version_upload(
+                file_id=file_id,
+                version_number=version_number,
+                user_id=user.id,
+                data=data,
+            )
+
+        except ServiceError as exc:
+            self._handle_service_error(exc)
+        """Verify a completed S3 upload."""
+
+        try:
+            return await self.service.verify_upload(
+                file_id=file_id,
+                user_id=user.id,
+            )
+
+        except ServiceError as exc:
+            self._handle_service_error(exc)
+    
+        async def initiate_version_upload(
+            self,
+            file_id: str,
+            data: FileVersionUploadRequest,
+            user: Any,
+        ) -> FileVersionUploadResponse:
+            """Initiate a new version upload."""
+
+            try:
+                return await self.service.initiate_version_upload(
+                    file_id=file_id,
+                    user_id=user.id,
+                    data=data,
+                )
+
+            except ServiceError as exc:
+                self._handle_service_error(exc)
+
+        async def verify_version_upload(
+            self,
+            file_id: str,
+            version_number: int,
+            data: FileVersionUploadRequest,
+            user: Any,
+        ):
+            """Verify a completed version upload."""
+
+            try:
+                return await self.service.verify_version_upload(
+                    file_id=file_id,
+                    version_number=version_number,
+                    user_id=user.id,
+                    data=data,
+                )
+
+            except ServiceError as exc:
+                self._handle_service_error(exc)
+        
 
     # ---------------------------------------------------------
     # Retrieve
@@ -190,6 +261,7 @@ class FileController:
         file_id: str,
         user: Any,
     ):
+
         """Delete a file from S3 and PostgreSQL."""
 
         try:
@@ -201,6 +273,23 @@ class FileController:
         except ServiceError as exc:
             self._handle_service_error(exc)
 
+    async def list_file_versions(self, file_id: str, user_id: str):
+        return await self.file_service.list_file_versions(
+            file_id=file_id,
+            user_id=user_id,
+        )
+    
+    async def download_file_version(
+        self,
+        file_id: str,
+        version_number: int,
+        user_id: str,
+    ):
+        return await self.file_service.download_file_version(
+            file_id=file_id,
+            version_number=version_number,
+            user_id=user_id,
+        )
 
 # Shared controller instance
 file_controller = FileController()

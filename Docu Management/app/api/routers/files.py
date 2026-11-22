@@ -17,6 +17,9 @@ from app.schemas.file import (
     FileResponse,
     FileDownloadResponse,
     FileRenameRequest,
+    FileVersionUploadRequest,
+    FileVersionUploadResponse,
+    FileVersionResponse,
 )
 
 router = APIRouter(tags=["Files"])
@@ -54,6 +57,41 @@ async def verify_upload(
         user=user,
     )
 
+@router.post(
+    "/files/{file_id}/versions",
+    response_model=FileVersionUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def initiate_version_upload(
+    file_id: str,
+    data: FileVersionUploadRequest,
+    user=Depends(get_current_user),
+):
+    """Initiates a new version upload."""
+    return await file_controller.initiate_version_upload(
+        file_id=file_id,
+        data=data,
+        user=user,
+    )
+
+
+@router.post(
+    "/files/{file_id}/versions/{version_number}/verify",
+    response_model=FileResponse,
+)
+async def verify_version_upload(
+    file_id: str,
+    version_number: int,
+    data: FileVersionUploadRequest,
+    user=Depends(get_current_user),
+):
+    """Verifies and finalizes a new file version."""
+    return await file_controller.verify_version_upload(
+        file_id=file_id,
+        version_number=version_number,
+        data=data,
+        user=user,
+    )
 
 @router.get(
     "/projects/{project_id}/files",
@@ -129,4 +167,33 @@ async def delete_file(
     return await file_controller.delete_file(
         file_id=file_id,
         user=user,
+    )
+
+@router.get(
+    "/files/{file_id}/versions",
+    response_model=list[FileVersionResponse],
+)
+async def list_file_versions(
+    file_id: str,
+    current_user=Depends(get_current_user),
+):
+    return await file_controller.list_file_versions(
+        file_id=file_id,
+        user_id=current_user.id,
+    )
+
+
+@router.get(
+    "/files/{file_id}/versions/{version_number}/download",
+    response_model=FileDownloadResponse,
+)
+async def download_file_version(
+    file_id: str,
+    version_number: int,
+    current_user=Depends(get_current_user),
+):
+    return await file_controller.download_file_version(
+        file_id=file_id,
+        version_number=version_number,
+        user_id=current_user.id,
     )

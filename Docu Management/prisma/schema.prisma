@@ -42,6 +42,7 @@ model User {
   refreshTokens        RefreshToken[]
   createdApiKeys       ApiKey[]       @relation("ApiKeyCreator")
   uploadedFiles        ProjectFile[]  @relation("FileUploader")
+  uploadedFileVersions FileVersion[]
 }
 
 // -----------------------------------------------------------------------------
@@ -183,6 +184,8 @@ model ProjectFile {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  currentVersion Int @default(1)
+  versions       FileVersion[]
 
   // Relationships
   project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -191,4 +194,23 @@ model ProjectFile {
   @@index([projectId, createdAt])
   @@index([uploadedById, createdAt])
   @@index([status])
+}
+
+
+model FileVersion {
+  id            String   @id @default(cuid())
+  versionNumber Int
+  objectKey     String   @unique
+  contentType   String
+  size          BigInt
+  uploadedById  String
+  createdAt     DateTime @default(now())
+
+  fileId String
+  file   ProjectFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  uploadedBy User @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@unique([fileId, versionNumber])
+  @@index([fileId, createdAt])
 }

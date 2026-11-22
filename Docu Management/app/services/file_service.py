@@ -36,7 +36,10 @@ from app.schemas.file import (
     FileUploadRequest,
     FileUploadResponse,
     FileDownloadResponse,
+    FileVersionUploadRequest,
+    FileVersionUploadResponse,
 )
+
 from app.services.storage_service import (
     StorageService,
     storage_service,
@@ -215,7 +218,7 @@ class FileService:
 
         # Generate a unique storage path.
         object_key = (
-            f"organizations/{project.organizationId}/"
+            f"organizations/{file.project.organizationId}/"
             f"projects/{project_id}/files/"
             f"{uuid4().hex}/{safe_name}"
         )
@@ -253,6 +256,66 @@ class FileService:
             expires_in=300,
         )
 
+    
+    async def initiate_version_upload(
+        self,
+        file_id: str,
+        user_id: str,
+        data: FileVersionUploadRequest,
+    ) -> FileVersionUploadResponse:
+        """Initiate a new version upload for an existing document."""
+
+        file, project, membership = await self.verify_file_access(
+            file_id=file_id,
+            user_id=user_id,
+        )
+
+        role = self.get_role(membership)
+
+        if role not in FILE_UPLOAD_ROLES:
+            raise ForbiddenError(
+                "Your organization role cannot upload file versions"
+            )
+
+        if file.uploadedById != user_id and role not in FILE_ADMIN_ROLES:
+            raise ForbiddenError(
+                "You cannot upload a version of another user's file"
+            )
+
+        if file.status != "UPLOADED":
+            raise ValidationError(
+                "Only completed files can have new versions"
+            )
+
+        if data.content_type != file.contentType:
+            raise ValidationError(
+                "New version must have the same file type as the original"
+            )
+
+        version_number = file.currentVersion + 1
+
+        object_key = (
+            f"organizations/{file.project.organizationId}/"
+            f"projects/{file.projectId}/files/"
+            f"{file.id}/versions/"
+            f"v{version_number}"
+        )
+
+        upload_url = self.storage.generate_upload_url(
+            object_key=object_key,
+            content_type=data.content_type,
+            expires_in=300,
+        )
+
+        return FileVersionUploadResponse(
+            file_id=file.id,
+            version_number=version_number,
+            object_key=object_key,
+            upload_url=upload_url,
+            expires_in=300,
+        )
+
+
     # ---------------------------------------------------------
     # Upload Verification
     # ---------------------------------------------------------
@@ -268,7 +331,7 @@ class FileService:
         matches the expected size, content type, and file format.
         """
 
-        file, _, membership = await self.verify_file_access(
+        file, project, membership = await self.verify_file_access(
             file_id=file_id,
             user_id=user_id,
         )
@@ -295,18 +358,29 @@ class FileService:
 
         metadata = self.storage.get_file_metadata(file.objectKey)
 
-        if metadata["file_size"] != int(file.size):
-            await self.reject_upload(
-                file,
-                "Uploaded file size does not match the expected size",
+        if metadata["file_size"] != data.size:
+            await self.reject_version_upload(
+                object_key,
+                "Uploaded version size does not match the expected size",
             )
 
-        if metadata["content_type"] != file.contentType:
-            await self.reject_upload(
-                file,
-                "Uploaded file content type does not match",
+        if metadata["file_size"] > 10 * 1024 * 1024:
+            await self.reject_version_upload(
+                object_key,
+                "Uploaded version exceeds the 10 MB size limit",
             )
 
+        if metadata["content_type"] != data.content_type:
+            await self.reject_version_upload(
+                object_key,
+                "Uploaded version content type does not match",
+            )
+
+        if data.content_type != file.contentType:
+            await self.reject_version_upload(
+                object_key,
+                "New version must have the same file type as the original",
+            )
         # Validate actual file contents.
         content = self.storage.get_file_content(file.objectKey)
 
@@ -316,10 +390,122 @@ class FileService:
                 "Uploaded file content does not match the expected file format",
             )
 
-        return await self.file_repo.update_file(
+        updated_file = await self.file_repo.update_file(
             file_id=file.id,
-            data={"status": "UPLOADED"},
+            data={
+                "status": "UPLOADED",
+                "currentVersion": 1,
+            },
         )
+
+        await self.file_repo.create_file_version(
+            file_id=file.id,
+            version_number=1,
+            object_key=file.objectKey,
+            content_type=file.contentType,
+            size=int(file.size),
+            uploaded_by_id=file.uploadedById,
+        )
+
+        return updated_file
+
+    async def verify_version_upload(
+        self,
+        file_id: str,
+        version_number: int,
+        user_id: str,
+        data: FileVersionUploadRequest,
+    ):
+        """Verify and finalize a newly uploaded document version."""
+
+        file, project, membership = await self.verify_file_access(
+            file_id=file_id,
+            user_id=user_id,
+        )
+
+        role = self.get_role(membership)
+
+        if role not in FILE_UPLOAD_ROLES:
+            raise ForbiddenError(
+                "Your organization role cannot verify file versions"
+            )
+
+        if file.uploadedById != user_id and role not in FILE_ADMIN_ROLES:
+            raise ForbiddenError(
+                "You cannot verify another user's file version"
+            )
+
+        if file.status != "UPLOADED":
+            raise ValidationError(
+                "Only completed files can have new versions"
+            )
+
+        expected_version = file.currentVersion + 1
+
+        if version_number != expected_version:
+            raise ValidationError(
+                f"Expected version {expected_version}, received {version_number}"
+            )
+
+        object_key = (
+            f"organizations/{project.organizationId}/"
+            f"projects/{file.projectId}/files/"
+            f"{file.id}/versions/"
+            f"v{version_number}"
+        )
+
+        if not self.storage.check_file_exists(object_key):
+            raise ValidationError(
+                "Version upload has not been completed"
+            )
+
+        metadata = self.storage.get_file_metadata(file.objectKey)
+
+        if metadata["file_size"] > 10 * 1024 * 1024:
+            await self.reject_version_upload(
+                object_key,
+                "Uploaded version exceeds the 10 MB size limit",
+            )
+
+        if metadata["content_type"] != file.contentType:
+            await self.reject_version_upload(
+                object_key,
+                "Uploaded version content type does not match",
+            )
+
+        if metadata["file_size"] <= 0:
+            await self.reject_version_upload(
+                object_key,
+                "Uploaded version is empty",
+            )
+
+        content = self.storage.get_file_content(file.objectKey)
+
+        if not self.validate_file_content(file.name, content):
+            await self.reject_version_upload(
+                object_key,
+                "Uploaded version content does not match the expected file format",
+            )
+
+        await self.file_repo.create_file_version(
+            file_id=file.id,
+            version_number=version_number,
+            object_key=object_key,
+            content_type=file.contentType,
+            size=metadata["file_size"],
+            uploaded_by_id=user_id,
+        )
+
+        updated_file = await self.file_repo.update_file(
+            file_id=file.id,
+            data={
+                "objectKey": object_key,
+                "size": metadata["file_size"],
+                "currentVersion": version_number,
+            },
+        )
+
+        return updated_file
 
 
     # ---------------------------------------------------------
@@ -411,7 +597,7 @@ class FileService:
         Rename a file in S3 and update its database record.
         """
 
-        file, _, membership = await self.verify_file_access(
+        file, project, membership = await self.verify_file_access(
             file_id=file_id,
             user_id=user_id,
         )
@@ -496,7 +682,7 @@ class FileService:
     ):
         """Delete an authorized file from S3 and PostgreSQL."""
 
-        file, _, membership = await self.verify_file_access(
+        file, project, membership = await self.verify_file_access(
             file_id=file_id,
             user_id=user_id,
         )
@@ -561,6 +747,65 @@ class FileService:
 
         raise ValidationError(message)
 
+    async def reject_version_upload(
+        self,
+        object_key: str,
+        message: str,
+    ):
+        """Remove an invalid version upload without deleting the original file."""
+
+        try:
+            self.storage.delete_file(object_key)
+        except Exception as exc:
+            raise ServiceUnavailableError(
+                "Could not clean up the invalid version upload"
+            ) from exc
+
+        raise ValidationError(message)
+
+    async def list_file_versions(self, file_id: str, user_id: str):
+        """Retrieve version history after verifying file access."""
+
+        file, project, membership = await self.verify_file_access(
+            file_id=file_id,
+            user_id=user_id,
+        )
+
+        if file.status != "UPLOADED":
+            raise ValidationError("File is not available.")
+
+        return await self.file_repo.list_file_versions(file_id)
+
+    async def download_file_version(
+        self,
+        file_id: str,
+        version_number: int,
+        user_id: str,
+    ) -> FileDownloadResponse:
+
+        file, project, membership = await self.verify_file_access(
+            file_id=file_id,
+            user_id=user_id,
+        )
+
+        version = await self.file_repo.get_file_version(
+            file_id=file_id,
+            version_number=version_number,
+        )
+
+        if version is None:
+            raise NotFoundError("File version not found.")
+
+        download_url = self.storage.generate_download_url(
+            object_key=version.objectKey,
+            expires_in=300,
+        )
+
+        return FileDownloadResponse(
+            file_id=file.id,
+            download_url=download_url,
+            expires_in=300,
+        )
 
 
 
