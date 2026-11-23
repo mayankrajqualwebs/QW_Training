@@ -2,29 +2,59 @@
 """
 File Schemas
 ============
-Pydantic schemas for file management requests and responses.
+Defines request and response models for project file management,
+including uploads, downloads, versioning, and restoration.
 """
 
 from datetime import datetime
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
+# ---------------------------------------------------------------------
+# Supported File Types
+# ---------------------------------------------------------------------
+
+PDF_CONTENT_TYPE = "application/pdf"
+
+DOCX_CONTENT_TYPE = (
+    "application/vnd.openxmlformats-officedocument."
+    "wordprocessingml.document"
+)
+
+AllowedContentType = Literal[
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]
+
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+
+
+# ---------------------------------------------------------------------
+# File Upload
+# ---------------------------------------------------------------------
 
 class FileUploadRequest(BaseModel):
-    """Request data required to initiate a file upload."""
+    """Request model for initiating a new file upload."""
 
-    name: str = Field(min_length=1, max_length=255)
-    content_type: str = Field(min_length=1, max_length=150)
+    name: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+    )
+
+    content_type: AllowedContentType
+
     size: int = Field(
+        ...,
         gt=0,
-        le=10 * 1024 * 1024,
-        description="Maximum allowed file size is 10 MB.",
+        le=MAX_FILE_SIZE,
     )
 
 
-
 class FileUploadResponse(BaseModel):
-    """Response containing temporary upload URL and file information."""
+    """Response containing the presigned S3 upload URL."""
 
     file_id: str
     object_key: str
@@ -32,8 +62,30 @@ class FileUploadResponse(BaseModel):
     expires_in: int
 
 
+# ---------------------------------------------------------------------
+# File Upload Verification
+# ---------------------------------------------------------------------
+
+class FileUploadVerifyRequest(BaseModel):
+    """Request model for verifying an uploaded file."""
+
+    object_key: str
+
+    content_type: AllowedContentType
+
+    size: int = Field(
+        ...,
+        gt=0,
+        le=MAX_FILE_SIZE,
+    )
+
+
+# ---------------------------------------------------------------------
+# File Information
+# ---------------------------------------------------------------------
+
 class FileResponse(BaseModel):
-    """File information returned by the API."""
+    """Response model representing a project file."""
 
     id: str
     name: str
@@ -46,36 +98,61 @@ class FileResponse(BaseModel):
     createdAt: datetime
     updatedAt: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    # Derived from the related FileVersion records.
+    totalVersions: int
 
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+# ---------------------------------------------------------------------
+# File Download
+# ---------------------------------------------------------------------
 
 class FileDownloadResponse(BaseModel):
-    """Response containing a temporary download URL."""
+    """Response containing a presigned S3 download URL."""
 
     file_id: str
     download_url: str
     expires_in: int
 
+    # Populated when downloading a specific historical version.
+    version_number: int | None = None
+
+
+# ---------------------------------------------------------------------
+# File Rename
+# ---------------------------------------------------------------------
 
 class FileRenameRequest(BaseModel):
-    """Request data for renaming a file."""
+    """Request model for renaming a file."""
 
-    new_name: str = Field(min_length=1, max_length=255)
+    new_name: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+    )
 
+
+# ---------------------------------------------------------------------
+# File Version Upload
+# ---------------------------------------------------------------------
 
 class FileVersionUploadRequest(BaseModel):
-    """Request data for uploading a new document version."""
+    """Request model for initiating a new file version upload."""
 
-    content_type: str = Field(min_length=1, max_length=150)
+    content_type: AllowedContentType
+
     size: int = Field(
+        ...,
         gt=0,
-        le=10 * 1024 * 1024,
-        description="Maximum allowed file size is 10 MB.",
+        le=MAX_FILE_SIZE,
     )
 
 
 class FileVersionUploadResponse(BaseModel):
-    """Response containing temporary upload URL and version information."""
+    """Response containing the presigned URL for a new version."""
 
     file_id: str
     version_number: int
@@ -84,8 +161,30 @@ class FileVersionUploadResponse(BaseModel):
     expires_in: int
 
 
+# ---------------------------------------------------------------------
+# File Version Upload Verification
+# ---------------------------------------------------------------------
+
+class FileVersionVerifyRequest(BaseModel):
+    """Request model for verifying an uploaded file version."""
+
+    object_key: str
+
+    content_type: AllowedContentType
+
+    size: int = Field(
+        ...,
+        gt=0,
+        le=MAX_FILE_SIZE,
+    )
+
+
+# ---------------------------------------------------------------------
+# File Version Information
+# ---------------------------------------------------------------------
+
 class FileVersionResponse(BaseModel):
-    """Information about an individual file version."""
+    """Response model representing a stored file version."""
 
     id: str
     versionNumber: int
@@ -94,4 +193,19 @@ class FileVersionResponse(BaseModel):
     uploadedById: str
     createdAt: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+# ---------------------------------------------------------------------
+# File Version Restoration
+# ---------------------------------------------------------------------
+
+class FileVersionRestoreResponse(BaseModel):
+    """Response returned after restoring a historical file version."""
+
+    file_id: str
+    restored_from_version: int
+    new_version_number: int
+    message: str

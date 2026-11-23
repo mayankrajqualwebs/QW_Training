@@ -24,6 +24,7 @@ enum MembershipRole {
 enum FileStatus {
   PENDING
   UPLOADED
+  DELETING
 }
 
 // -----------------------------------------------------------------------------
