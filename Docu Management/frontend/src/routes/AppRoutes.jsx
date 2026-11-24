@@ -1,31 +1,184 @@
-import { useWorkspace } from "../hooks/useWorkspace";
+
+import {
+    Navigate,
+    Outlet,
+    Route,
+    Routes,
+    useLocation,
+    useNavigate,
+} from "react-router-dom";
+
+import { useAuth } from "../hooks/useAuth";
+import { WorkspaceProvider } from "../context/WorkspaceProvider";
+
+import { UserLayout } from "../layouts/UserLayout";
+import { AdminLayout } from "../layouts/AdminLayout";
+
 import { OverviewPage } from "../pages/OverviewPage";
 import { ProjectsPage } from "../pages/ProjectsPage";
+import { FilesPage } from "../pages/FilesPage";
 import { ApiKeysPage } from "../pages/ApiKeysPage";
 import { AnalyticsPage } from "../pages/AnalyticsPage";
 import { SettingsPage } from "../pages/SettingsPage";
-import { FilesPage } from "../pages/FilesPage";
+
+function RoleRedirect() {
+    const { user } = useAuth();
+
+    if (user?.platform_role === "ADMIN") {
+        return <Navigate to="/admin/overview" replace />;
+    }
+
+    if (user?.platform_role === "USER") {
+        return <Navigate to="/workspace/overview" replace />;
+    }
+
+    return <div>Unable to determine your account role. Please contact support.</div>;
+}
+
+function UnknownRole() {
+    return (
+        <div className="screen-center">
+            <h2>Account role not recognized</h2>
+            <p>
+                Your account does not have a valid platform role.
+                Please contact support.
+            </p>
+        </div>
+    );
+}
+
+function UserRoute() {
+    const { user } = useAuth();
+
+    if (user?.platform_role === "ADMIN") {
+        return <Navigate to="/admin/overview" replace />;
+    }
+
+    if (user?.platform_role !== "USER") {
+        return <UnknownRole />;
+    }
+
+    return (
+        <WorkspaceProvider>
+            <UserLayout>
+                <Outlet />
+            </UserLayout>
+        </WorkspaceProvider>
+    );
+}
+
+function AdminRoute() {
+    const { user } = useAuth();
+
+    if (user?.platform_role === "USER") {
+        return <Navigate to="/workspace/overview" replace />;
+    }
+
+    if (user?.platform_role !== "ADMIN") {
+        return <UnknownRole />;
+    }
+
+    return <AdminLayoutRoute />;
+}
+
+function AdminLayoutRoute() {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const adminPages = {
+        "/admin/overview": "Overview",
+        "/admin/users": "User Management",
+        "/admin/projects": "Project Management",
+        "/admin/documents": "Document Management",
+        "/admin/api-keys": "API Key Management",
+        "/admin/monitoring": "API Monitoring",
+    };
+
+    const page = adminPages[location.pathname] ?? "Overview";
+
+    const adminPaths = {
+        Overview: "/admin/overview",
+        "User Management": "/admin/users",
+        "Project Management": "/admin/projects",
+        "Document Management": "/admin/documents",
+        "API Key Management": "/admin/api-keys",
+        "API Monitoring": "/admin/monitoring",
+    };
+
+    return (
+        <AdminLayout
+            page={page}
+            onNavigate={(label) => navigate(adminPaths[label])}
+        >
+            <Outlet />
+        </AdminLayout>
+    );
+}
+
+function AdminPlaceholder({ title }) {
+    return (
+        <section className="panel empty-workspace">
+            <h2>{title}</h2>
+            <p>
+                This section is planned and will be implemented
+                as part of the Admin Console.
+            </p>
+        </section>
+    );
+}
 
 export function AppRoutes() {
-    const { page } = useWorkspace();
+    return (
+        <Routes>
+            <Route path="/" element={<RoleRedirect />} />
 
-    switch (page) {
-        case "Overview":
-            return <OverviewPage />;
-        case "Projects":
-            return <ProjectsPage />;
-        case "Files":
-            return <FilesPage />;
-        case "API Keys":
-            return <ApiKeysPage />;
-        case "Analytics":
-            return <AnalyticsPage />;
-        case "Settings":
-            return <SettingsPage />;
-        default:
-            return <OverviewPage />;
-    }
+            <Route path="/workspace" element={<UserRoute />}>
+                <Route
+                    index
+                    element={<Navigate to="overview" replace />}
+                />
+                <Route path="overview" element={<OverviewPage />} />
+                <Route path="projects" element={<ProjectsPage />} />
+                <Route path="files" element={<FilesPage />} />
+                <Route path="api-keys" element={<ApiKeysPage />} />
+                <Route path="analytics" element={<AnalyticsPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+            </Route>
+
+            <Route path="/admin" element={<AdminRoute />}>
+                <Route
+                    index
+                    element={<Navigate to="overview" replace />}
+                />
+                <Route
+                    path="overview"
+                    element={<AdminPlaceholder title="Admin Overview" />}
+                />
+                <Route
+                    path="users"
+                    element={<AdminPlaceholder title="User Management" />}
+                />
+                <Route
+                    path="projects"
+                    element={<AdminPlaceholder title="Project Management" />}
+                />
+                <Route
+                    path="documents"
+                    element={<AdminPlaceholder title="Document Management" />}
+                />
+                <Route
+                    path="api-keys"
+                    element={<AdminPlaceholder title="API Key Management" />}
+                />
+                <Route
+                    path="monitoring"
+                    element={<AdminPlaceholder title="API Monitoring" />}
+                />
+            </Route>
+
+            <Route path="*" element={<RoleRedirect />} />
+        </Routes>
+    );
 }
 
 export default AppRoutes;
-

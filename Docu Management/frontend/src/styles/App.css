@@ -1572,3 +1572,330 @@ td code {
     flex-direction: column;
   }
 }
+
+
+/* =========================================
+   PLATFORM THEME SYSTEM
+========================================= */
+
+.app-shell {
+  --accent-primary: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-soft: #eff6ff;
+  --accent-border: #bfdbfe;
+  --accent-ink: #1e40af;
+  --surface-page: #f5f8fd;
+}
+
+/* User Workspace */
+.app-shell-blue {
+  --accent-primary: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-soft: #eff6ff;
+  --accent-border: #bfdbfe;
+  --accent-ink: #1e40af;
+  --surface-page: #f5f8fd;
+}
+
+/* Admin Console */
+.app-shell-teal {
+  --accent-primary: #0d9488;
+  --accent-hover: #0f766e;
+  --accent-soft: #f0fdfa;
+  --accent-border: #99f6e4;
+  --accent-ink: #115e59;
+  --surface-page: #f3f8f8;
+}
+
+.app-shell .main-area {
+  background: var(--surface-page);
+}
+
+/* =========================================
+   SHARED ACCENT COMPONENTS
+========================================= */
+
+.app-shell .brand-mark {
+  background: linear-gradient(140deg,
+      var(--accent-primary),
+      var(--accent-hover));
+}
+
+.app-shell .side-create {
+  color: var(--accent-ink);
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.app-shell .side-link:hover,
+.app-shell .side-link.selected {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.app-shell .nav-count {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.app-shell .icon-button:hover {
+  color: var(--accent-primary);
+  background: var(--accent-soft);
+}
+
+.app-shell .eyebrow {
+  color: var(--accent-primary);
+}
+
+.app-shell .primary-button {
+  color: white;
+  border-color: var(--accent-primary);
+  background: var(--accent-primary);
+}
+
+.app-shell .primary-button:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.app-shell .metric-icon,
+.app-shell .key-icon,
+.app-shell .empty-icon {
+  color: var(--accent-primary);
+  background: var(--accent-soft);
+}
+
+.app-shell .selection-role {
+  color: var(--accent-ink);
+}
+
+.app-shell .endpoint-code {
+  color: var(--accent-ink);
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.app-shell .loading-indicator {
+  color: var(--accent-ink);
+  border-color: var(--accent-border);
+}
+
+.app-shell input:focus,
+.app-shell select:focus,
+.app-shell textarea:focus {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb,
+      var(--accent-primary) 12%,
+      transparent);
+}
+
+/* =========================================
+   ADMIN CONSOLE — DISTINCT DARK SIDEBAR
+========================================= */
+
+.app-shell-teal .sidebar {
+  color: #e2e8f0;
+  background: #102a36;
+  border-right-color: #1e3b46;
+}
+
+.app-shell-teal .brand strong {
+  color: #f8fafc;
+}
+
+.app-shell-teal .brand small {
+  color: #91a8b1;
+}
+
+.app-shell-teal .side-label {
+  color: #829ba5;
+}
+
+.app-shell-teal .side-link {
+  color: #b1c3ca;
+}
+
+.app-shell-teal .side-link:hover,
+.app-shell-teal .side-link.selected {
+  color: #5eead4;
+  background: #16434a;
+}
+
+.app-shell-teal .nav-count {
+  color: #99f6e4;
+  background: #16434a;
+}
+
+.app-shell-teal .sidebar-footer {
+  border-top-color: #29434c;
+}
+
+.app-shell-teal .signed-user-info strong {
+  color: #e2e8f0;
+}
+
+.app-shell-teal .signed-user-info small {
+  color: #91a8b1;
+}
+
+.app-shell-teal .logout-link {
+  color: #fda4af;
+}
+
+.app-shell-teal .logout-link:hover {
+  color: #fecdd3;
+  background: #4c2530;
+}
+
+.app-shell-teal .avatar {
+  color: #ccfbf1;
+  background: #0f766e;
+}
+
+/* Admin topbar identity */
+.app-shell-teal .topbar {
+  border-bottom-color: #e0ebeb;
+}
+
+.app-shell-teal .breadcrumb strong {
+  color: #115e59;
+}
+
+/* =========================================
+   RESPONSIVE SIDEBAR CONTROLS
+========================================= */
+
+@media (max-width: 700px) {
+  .app-shell .sidebar {
+    gap: 10px;
+  }
+
+  .app-shell .side-label {
+    display: block;
+  }
+
+  .app-shell .workspace-select,
+  .app-shell .side-create {
+    display: flex;
+  }
+
+  .app-shell .workspace-select {
+    width: 100%;
+  }
+
+  .app-shell .sidebar-footer {
+    display: block;
+    margin-top: 10px;
+  }
+
+  .app-shell .side-nav {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+
+  .app-shell .side-link {
+    flex-shrink: 0;
+  }
+
+  .app-shell-teal .sidebar {
+    border-bottom-color: #1e3b46;
+  }
+}
+
+/* =========================================
+   USER WORKSPACE — REFINED BLUE IDENTITY
+========================================= */
+
+.app-shell-blue .sidebar {
+  background: #ffffff;
+  border-right-color: #e2eaf5;
+}
+
+.app-shell-blue .brand-mark {
+  box-shadow: 0 4px 10px #2563eb25;
+}
+
+.app-shell-blue .side-label {
+  color: #8795aa;
+}
+
+/* Navigation */
+.app-shell-blue .side-link {
+  border-left: 3px solid transparent;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.app-shell-blue .side-link:hover {
+  color: #1d4ed8;
+  background: #f1f6ff;
+}
+
+.app-shell-blue .side-link.selected {
+  color: #1d4ed8;
+  background: #eaf2ff;
+  border-left-color: #2563eb;
+  font-weight: 700;
+}
+
+/* Organization controls */
+.app-shell-blue .workspace-select {
+  border-color: #dce6f3;
+  background: #f8faff;
+  color: #334155;
+}
+
+.app-shell-blue .side-create {
+  border-color: #cfe0ff;
+  background: #eff6ff;
+  color: #1d4ed8;
+  transition: background 0.18s ease;
+}
+
+.app-shell-blue .side-create:hover {
+  background: #dbeafe;
+}
+
+/* Topbar */
+.app-shell-blue .topbar {
+  background: #ffffffed;
+  border-bottom-color: #e2eaf5;
+}
+
+.app-shell-blue .breadcrumb strong {
+  color: #1e40af;
+}
+
+/* Workspace surfaces */
+.app-shell-blue .selection-bar {
+  border-color: #e1eaf6;
+  box-shadow: 0 3px 12px #1e40af08;
+}
+
+.app-shell-blue .panel,
+.app-shell-blue .metric-card {
+  border-color: #e3eaf4;
+}
+
+.app-shell-blue .filter-tab.active {
+  color: #ffffff;
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.app-shell-blue .scope-option input {
+  accent-color: var(--accent-primary);
+}
+
+.app-shell-blue .breakdown-bar-fill {
+  background: var(--accent-primary);
+}
+
+/* Improved hover feedback */
+.app-shell-blue .primary-button {
+  box-shadow: 0 2px 5px #2563eb20;
+}
+
+.app-shell-blue .primary-button:hover:not(:disabled) {
+  box-shadow: 0 4px 10px #2563eb30;
+}

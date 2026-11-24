@@ -1,9 +1,7 @@
 import { RefreshCw } from "lucide-react";
 import { AuthProvider } from "./context/AuthProvider";
-import { WorkspaceProvider } from "./context/WorkspaceProvider";
 import { useAuth } from "./hooks/useAuth";
 import { AuthScreen } from "./features/authentication";
-import { MainLayout } from "./layouts/MainLayout";
 import { AppRoutes } from "./routes/AppRoutes";
 import "./styles/App.css";
 
@@ -23,13 +21,7 @@ function AppContent() {
         return <AuthScreen />;
     }
 
-    return (
-        <WorkspaceProvider>
-            <MainLayout>
-                <AppRoutes />
-            </MainLayout>
-        </WorkspaceProvider>
-    );
+    return <AppRoutes />;
 }
 
 export function App() {
