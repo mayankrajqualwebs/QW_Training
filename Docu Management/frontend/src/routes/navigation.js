@@ -4,7 +4,6 @@ import {
     FolderKanban,
     KeyRound,
     BarChart3,
-    ShieldCheck,
     Files,
     Users,
     Activity,

@@ -20,6 +20,7 @@ import { FilesPage } from "../pages/FilesPage";
 import { ApiKeysPage } from "../pages/ApiKeysPage";
 import { AnalyticsPage } from "../pages/AnalyticsPage";
 import { SettingsPage } from "../pages/SettingsPage";
+import { PlaceholderPage } from "../pages/PlaceholderPage";
 
 function RoleRedirect() {
     const { user } = useAuth();
@@ -137,42 +138,57 @@ export function AppRoutes() {
                     index
                     element={<Navigate to="overview" replace />}
                 />
+
                 <Route path="overview" element={<OverviewPage />} />
                 <Route path="projects" element={<ProjectsPage />} />
-                <Route path="files" element={<FilesPage />} />
-                <Route path="api-keys" element={<ApiKeysPage />} />
+
+                {/* Existing FilesPage serves as Documents for now */}
+                <Route path="documents" element={<FilesPage />} />
+
+                {/* Placeholder until AI Assistant is implemented */}
+                // User Workspace
+                <Route
+                    path="ai-assistant"
+                    element={
+                        <PlaceholderPage
+                            title="AI Assistant"
+                            description="Search your documents, ask questions, and get AI-powered insights. This feature is coming soon."
+                        />
+                    }
+                />
+
+                {/* Existing ApiKeysPage serves as API Access for now */}
+                <Route path="api-access" element={<ApiKeysPage />} />
+
                 <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
             </Route>
 
+
             <Route path="/admin" element={<AdminRoute />}>
                 <Route
-                    index
-                    element={<Navigate to="overview" replace />}
-                />
-                <Route
                     path="overview"
-                    element={<AdminPlaceholder title="Admin Overview" />}
+                    element={<PlaceholderPage title="Admin Overview" />}
                 />
                 <Route
                     path="users"
-                    element={<AdminPlaceholder title="User Management" />}
+                    element={<PlaceholderPage title="User Management" />}
                 />
                 <Route
                     path="projects"
-                    element={<AdminPlaceholder title="Project Management" />}
+                    element={<PlaceholderPage title="Project Management" />}
                 />
                 <Route
                     path="documents"
-                    element={<AdminPlaceholder title="Document Management" />}
+                    element={<PlaceholderPage title="Document Management" />}
                 />
                 <Route
                     path="api-keys"
-                    element={<AdminPlaceholder title="API Key Management" />}
+                    element={<PlaceholderPage title="API Key Management" />}
                 />
                 <Route
                     path="monitoring"
-                    element={<AdminPlaceholder title="API Monitoring" />}
+                    element={<PlaceholderPage title="API Monitoring" />}
                 />
             </Route>
 

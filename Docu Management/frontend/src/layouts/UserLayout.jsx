@@ -1,7 +1,5 @@
-
-import { Plus, Users, FolderKanban } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-
+import { Plus, Users, FolderKanban } from "lucide-react";
 import { MainLayout } from "./MainLayout";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
@@ -47,8 +45,9 @@ export function UserLayout({ children }) {
     const pageByPath = {
         "/workspace/overview": "Overview",
         "/workspace/projects": "Projects",
-        "/workspace/files": "Files",
-        "/workspace/api-keys": "API Keys",
+        "/workspace/documents": "Documents",
+        "/workspace/ai-assistant": "AI Assistant",
+        "/workspace/api-access": "API Access",
         "/workspace/analytics": "Analytics",
         "/workspace/settings": "Settings",
     };
@@ -56,8 +55,9 @@ export function UserLayout({ children }) {
     const pathByPage = {
         Overview: "/workspace/overview",
         Projects: "/workspace/projects",
-        Files: "/workspace/files",
-        "API Keys": "/workspace/api-keys",
+        Documents: "/workspace/documents",
+        "AI Assistant": "/workspace/ai-assistant",
+        "API Access": "/workspace/api-access",
         Analytics: "/workspace/analytics",
         Settings: "/workspace/settings",
     };
@@ -69,7 +69,7 @@ export function UserLayout({ children }) {
         count:
             item.label === "Projects"
                 ? projects.length
-                : item.label === "API Keys"
+                : item.label === "API Access"
                     ? activeKeys.length
                     : undefined,
     }));
@@ -158,29 +158,31 @@ export function UserLayout({ children }) {
                         </p>
                     </div>
 
-                    <div className="header-actions">
-                        <button
-                            className="secondary-button"
-                            onClick={() => setShowOrganizationForm(true)}
-                        >
-                            <Plus size={16} />
-                            Organization
-                        </button>
+                    {(page === "Overview" || page === "Projects") && (
+                        <div className="header-actions">
+                            <button
+                                className="secondary-button"
+                                onClick={() => setShowOrganizationForm(true)}
+                            >
+                                <Plus size={16} />
+                                Organization
+                            </button>
 
-                        <button
-                            className="primary-button"
-                            disabled={!organizationId}
-                            onClick={() => setShowProjectForm(true)}
-                        >
-                            <Plus size={17} />
-                            New Project
-                        </button>
-                    </div>
+                            <button
+                                className="primary-button"
+                                disabled={!organizationId}
+                                onClick={() => setShowProjectForm(true)}
+                            >
+                                <Plus size={17} />
+                                New Project
+                            </button>
+                        </div>
+                    )}
                 </section>
 
                 <SelectionBar />
 
-                {!organizations.length && (
+                {page === "Projects" && !organizations.length && (
                     <section className="empty-workspace panel">
                         <div className="empty-icon">
                             <Users size={24} />
@@ -189,9 +191,8 @@ export function UserLayout({ children }) {
                         <h2>Create your first organization</h2>
 
                         <p>
-                            Organizations represent your company or
-                            workspace. They hold your projects and
-                            team memberships.
+                            Organizations represent your company or workspace.
+                            They hold your projects and team memberships.
                         </p>
 
                         <button
@@ -204,35 +205,37 @@ export function UserLayout({ children }) {
                     </section>
                 )}
 
-                {organizations.length > 0 && !projects.length && (
-                    <section className="empty-workspace panel">
-                        <div className="empty-icon">
-                            <FolderKanban size={24} />
-                        </div>
+                {page === "Projects" &&
+                    organizations.length > 0 &&
+                    !projects.length && (
+                        <section className="empty-workspace panel">
+                            <div className="empty-icon">
+                                <FolderKanban size={24} />
+                            </div>
 
-                        <h2>Create your first project</h2>
+                            <h2>Create your first project</h2>
 
-                        <p>
-                            Projects organize your applications, documents,
-                            API keys, and request logs.
-                        </p>
+                            <p>
+                                Projects organize your applications, documents,
+                                API keys, and request logs.
+                            </p>
 
-                        <button
-                            className="primary-button"
-                            disabled={!organizationId}
-                            onClick={() => setShowProjectForm(true)}
-                        >
-                            <Plus size={16} />
-                            Create Project
-                        </button>
-                    </section>
-                )}
+                            <button
+                                className="primary-button"
+                                disabled={!organizationId}
+                                onClick={() => setShowProjectForm(true)}
+                            >
+                                <Plus size={16} />
+                                Create Project
+                            </button>
+                        </section>
+                    )}
 
                 {children}
 
                 {loading && (
                     <div className="loading-indicator">
-                        Updating…
+                        Loading workspace…
                     </div>
                 )}
             </MainLayout>

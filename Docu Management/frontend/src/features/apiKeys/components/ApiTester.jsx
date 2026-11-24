@@ -22,28 +22,17 @@ export function ApiTester() {
     useEffect(() => {
         if (!shouldScrollToTester) return;
 
-        let cancelled = false;
-        const scrollToTarget = () => {
-            const target = testerRef.current || document.querySelector(".panel.protected-test");
-            if (target) {
-                target.scrollIntoView({ behavior: "smooth", block: "start" });
-                inputRef.current?.focus();
-                consumeScrollToTester?.();
-            } else if (!cancelled) {
-                requestAnimationFrame(scrollToTarget);
-            }
-        };
+        const frameId = requestAnimationFrame(() => {
+            testerRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+            });
 
-        const timer = setTimeout(() => {
-            if (!cancelled) {
-                scrollToTarget();
-            }
-        }, 100);
+            inputRef.current?.focus();
+            consumeScrollToTester?.();
+        });
 
-        return () => {
-            cancelled = true;
-            clearTimeout(timer);
-        };
+        return () => cancelAnimationFrame(frameId);
     }, [shouldScrollToTester, consumeScrollToTester]);
 
     async function handleTest(event) {
@@ -68,10 +57,13 @@ export function ApiTester() {
             <form className="inline-form" onSubmit={handleTest}>
                 <input
                     ref={inputRef}
+                    type="password"
+                    autoComplete="off"
                     value={testingKey}
                     onChange={(e) => setTestingKey(e.target.value)}
-                    placeholder="Enter or paste API Key ID or secret..."
+                    placeholder="Paste your API key secret..."
                     required
+                    disabled={!projectId || testLoading}
                 />
                 <button
                     className="primary-button"
@@ -86,13 +78,12 @@ export function ApiTester() {
                     <div className="test-console-header">
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             <span
-                                className={`status-badge ${
-                                    testResult.data?.success === false
-                                        ? "status-4xx"
-                                        : testResult.status < 300
+                                className={`status-badge ${testResult.data?.success === false
+                                    ? "status-4xx"
+                                    : testResult.status < 300
                                         ? "status-2xx"
                                         : "status-4xx"
-                                }`}
+                                    }`}
                             >
                                 {testResult.data?.status
                                     ? `STATUS: ${testResult.data.status.toUpperCase()}`

@@ -1,13 +1,18 @@
-import { useState } from "react";
-import Modal from "../components/Modal/Modal";
 import { useWorkspace } from "../hooks/useWorkspace";
-import { Activity, KeyRound, FolderKanban, ShieldCheck, Plus } from "lucide-react";
+import {
+    Activity,
+    KeyRound,
+    FolderKanban,
+    ShieldCheck,
+    Plus,
+} from "lucide-react";
 import { Metric } from "../components/Metric";
 import { EmptyMessage } from "../components/EmptyMessage";
 import { AnalyticsChart } from "../features/analytics/components/AnalyticsChart";
 import { StatusCodeBreakdown } from "../features/analytics/components/StatusCodeBreakdown";
 import { KeyList } from "../features/apiKeys/components/KeyList";
 import { ApiTester } from "../features/apiKeys/components/ApiTester";
+import { useNavigate } from "react-router-dom";
 
 export function OverviewPage() {
     const {
@@ -19,15 +24,14 @@ export function OverviewPage() {
         projectId,
         selectedProject,
         keys,
-        revokeKey,
         handleRevokeClick,
         setTestingKey,
-        setPage,
         setShowKeyForm,
         triggerScrollToTester,
+        setNotice,
     } = useWorkspace();
 
-    const [showFullKeyModal, setShowFullKeyModal] = useState(false);
+    const navigate = useNavigate();
 
     const chartData = summary
         ? [
@@ -92,7 +96,7 @@ export function OverviewPage() {
                             <AnalyticsChart
                                 data={chartData}
                                 gradientId="requestsFill"
-                                strokeColor="#7564e8"
+                                strokeColor="#3978e8"
                                 height={210}
                             />
 
@@ -148,17 +152,19 @@ export function OverviewPage() {
                     <KeyList
                         keys={keys.slice(0, 5)}
                         onRevoke={handleRevokeClick}
-                        onSelectForTest={(k) => {
-                            setTestingKey(k.id);
+                        onSelectForTest={(key) => {
+                            setTestingKey("");
                             triggerScrollToTester?.();
-                            setNotice(`Loaded API key "${k.name}" (ID: ${k.id}) into tester.`);
+                            setNotice(
+                                `Paste the original API key secret for "${key.name}" to test it.`
+                            );
                         }}
                     />
 
                     {keys.length > 5 && (
                         <button
                             className="primary-button compact"
-                            onClick={() => setPage("API Keys")}
+                            onClick={() => navigate("/workspace/api-access")}
                         >
                             View all {keys.length} keys →
                         </button>

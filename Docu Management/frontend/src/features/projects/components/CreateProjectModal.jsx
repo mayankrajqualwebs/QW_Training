@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Modal } from "../../../components/Modal";
 import { useWorkspace } from "../../../hooks/useWorkspace";
 import { slugify } from "../../../utils/string";
+import { useNavigate } from "react-router-dom";
 
 export function CreateProjectModal({ onClose }) {
     const { createProject, loading, organizationId, selectedOrganization } = useWorkspace();
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
+    const navigate = useNavigate();
 
     async function handleSubmit(event) {
         event.preventDefault();
@@ -16,6 +18,7 @@ export function CreateProjectModal({ onClose }) {
                 name: name.trim(),
                 slug: slugify(slug || name),
             });
+            navigate("/workspace/projects");
             onClose();
         } catch {
             // Error is handled in context

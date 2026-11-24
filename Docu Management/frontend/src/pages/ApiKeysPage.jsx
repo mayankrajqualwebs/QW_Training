@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import { useWorkspace } from "../hooks/useWorkspace";
 import { KeyList } from "../features/apiKeys/components/KeyList";
+import { useNavigate } from "react-router-dom";
 
 export function ApiKeysPage() {
     const {
@@ -14,14 +15,13 @@ export function ApiKeysPage() {
         setKeySearch,
         projectId,
         setShowKeyForm,
-        revokeKey,
         setTestingKey,
-        setPage,
         setNotice,
         handleRevokeClick,
-        testProtectedApi,
         triggerScrollToTester,
     } = useWorkspace();
+
+    const navigate = useNavigate();
 
     return (
         <section className="panel">
@@ -79,10 +79,12 @@ export function ApiKeysPage() {
                 onRevoke={handleRevokeClick}
                 detailed
                 onSelectForTest={(key) => {
-                    setTestingKey(key.id);
-                    setPage("Overview");
+                    setTestingKey("");
+                    navigate("/workspace/overview");
                     triggerScrollToTester?.();
-                    setNotice(`Loaded API key "${key.name}" (ID: ${key.id}) into tester.`);
+                    setNotice(
+                        `Opened tester for "${key.name}". Paste its original API key secret to authenticate.`
+                    );
                 }}
             />
         </section>
