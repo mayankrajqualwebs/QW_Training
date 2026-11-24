@@ -27,15 +27,21 @@ enum FileStatus {
   DELETING
 }
 
+enum PlatformRole {
+  USER
+  ADMIN
+}
+
 // -----------------------------------------------------------------------------
 // Core User Model
 // -----------------------------------------------------------------------------
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String       @id @default(cuid())
+  email        String       @unique
   passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  platformRole PlatformRole @default(USER)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   // Relationships
   memberships          Membership[]

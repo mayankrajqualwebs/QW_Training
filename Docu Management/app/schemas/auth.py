@@ -24,6 +24,7 @@ class UserResponse(BaseModel):
     """Public user profile returned after registration or from the `/auth/me` endpoint."""
     id: str
     email: EmailStr
+    platform_role: str
 
 
 class RefreshRequest(BaseModel):

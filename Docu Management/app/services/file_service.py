@@ -20,7 +20,7 @@ from app.repositories.file_repository import FileRepository
 from app.repositories.project_repository import ProjectRepository
 from app.services.storage_service import StorageService
 
-from app.exceptions.service_errors import (
+from app.services.exceptions import (
     ConflictError,
     ForbiddenError,
     NotFoundError,

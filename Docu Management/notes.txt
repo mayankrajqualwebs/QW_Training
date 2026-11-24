@@ -454,3 +454,44 @@ Docu Management/
 
 
 
+Current capabilities
+Upload documents
+
+List documents
+Search filenames
+Download documents
+Rename documents
+Delete documents
+
+
+Planned capabilities
+PDF preview
+
+
+DOCX preview
+Version history
+Restore versions
+Document editing
+AI reprocessing
+AI document search
+AI chat
+
+
+User dashboard
+Overview
+Projects
+Documents
+AI Assistant
+API Access
+Usage & Analytics
+
+
+Admin dashboard
+Admin Overview
+
+User Management
+Project Management
+Document Management
+API Key Management
+API Monitoring
+

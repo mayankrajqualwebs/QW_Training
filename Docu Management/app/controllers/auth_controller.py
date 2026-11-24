@@ -70,6 +70,7 @@ class AuthController:
         return UserResponse(
             id=user.id,
             email=user.email,
+            platform_role=user.platformRole,
         )
 
 
