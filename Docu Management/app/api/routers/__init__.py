@@ -12,6 +12,7 @@ from app.api.routers.health import router as health_router
 from app.api.routers.organizations import router as organizations_router
 from app.api.routers.projects import router as projects_router
 from app.api.routers.usage import router as usage_router
+from app.controllers.admin_controller import router as admin_router
 
 __all__ = [
     "analytics_router",
@@ -22,4 +23,5 @@ __all__ = [
     "organizations_router",
     "projects_router",
     "usage_router",
+    "admin_router",
 ]

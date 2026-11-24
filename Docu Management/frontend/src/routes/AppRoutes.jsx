@@ -21,6 +21,7 @@ import { ApiKeysPage } from "../pages/ApiKeysPage";
 import { AnalyticsPage } from "../pages/AnalyticsPage";
 import { SettingsPage } from "../pages/SettingsPage";
 import { PlaceholderPage } from "../pages/PlaceholderPage";
+import { AdminOverviewPage } from "../pages/AdminOverviewPage";
 
 function RoleRedirect() {
     const { user } = useAuth();
@@ -146,7 +147,7 @@ export function AppRoutes() {
                 <Route path="documents" element={<FilesPage />} />
 
                 {/* Placeholder until AI Assistant is implemented */}
-                // User Workspace
+                {/* User Workspace */}
                 <Route
                     path="ai-assistant"
                     element={
@@ -168,7 +169,7 @@ export function AppRoutes() {
             <Route path="/admin" element={<AdminRoute />}>
                 <Route
                     path="overview"
-                    element={<PlaceholderPage title="Admin Overview" />}
+                    element={<AdminOverviewPage />}
                 />
                 <Route
                     path="users"

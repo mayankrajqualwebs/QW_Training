@@ -37,7 +37,7 @@ from app.db.client import prisma
 from app.repositories.api_key_repository import api_key_repository
 from app.repositories.project_repository import project_repository
 from app.repositories.request_log_repository import request_log_repository
-
+from app.api.routers import admin_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -200,3 +200,4 @@ app.include_router(usage_router)           # /v1/projects/{proj_id}/data
 app.include_router(analytics_router)       # /organizations/{org_id}/projects/{proj_id}/analytics/summary
 app.include_router(api_test_router)
 app.include_router(files_router)
+app.include_router(admin_router)
