@@ -9,6 +9,7 @@ and recent activity for the Admin Console.
 import asyncio
 from fastapi import HTTPException
 from app.repositories.admin_repository import admin_repository
+from app.repositories.project_repository import project_repository
 
 class AdminService:
     """Service for Admin Console dashboard operations."""
@@ -242,6 +243,42 @@ class AdminService:
             "email": updated_user.email,
             "platform_role": updated_role,
         }
+
+    
+    # -----------------------------------------------------------------
+    # Admin Project Management
+    # -----------------------------------------------------------------
+
+    async def get_projects(
+        self,
+        search: str | None = None,
+        organization_id: str | None = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict:
+        """Return a paginated, platform-wide project listing."""
+
+        skip = (page - 1) * page_size
+
+        projects = await project_repository.list_all_projects(
+            search=search,
+            organization_id=organization_id,
+            skip=skip,
+            take=page_size,
+        )
+
+        total = await project_repository.count_all_projects(
+            search=search,
+            organization_id=organization_id,
+        )
+
+        return {
+            "projects": projects,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        }
+
 
 
 

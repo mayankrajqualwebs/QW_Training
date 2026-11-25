@@ -123,6 +123,71 @@ class ProjectRepository:
             },
         )
 
+    
+    # -----------------------------------------------------------------
+    # Platform-wide Project Listing (Admin)
+    # -----------------------------------------------------------------
+
+    async def list_all_projects(
+        self,
+        search: Optional[str] = None,
+        organization_id: Optional[str] = None,
+        skip: int = 0,
+        take: int = 20,
+    ) -> list[Project]:
+        """
+        Fetch projects across all organizations.
+
+        Intended for platform administrators.
+        Authorization is handled by the admin service/controller.
+        """
+
+        where = {}
+
+        if search:
+            where["name"] = {
+                "contains": search.strip(),
+                "mode": "insensitive",
+            }
+
+        if organization_id:
+            where["organizationId"] = organization_id
+
+        return await prisma.project.find_many(
+            where=where,
+            include={
+                "organization": True,
+            },
+            skip=skip,
+            take=take,
+            order={
+                "createdAt": "desc",
+            },
+        )
+
+    async def count_all_projects(
+        self,
+        search: Optional[str] = None,
+        organization_id: Optional[str] = None,
+    ) -> int:
+        """Count projects using the same filters as the admin listing."""
+
+        where = {}
+
+        if search:
+            where["name"] = {
+                "contains": search.strip(),
+                "mode": "insensitive",
+            }
+
+        if organization_id:
+            where["organizationId"] = organization_id
+
+        return await prisma.project.count(
+            where=where,
+        )
+
+
 
 # ---------------------------------------------------------------------
 # Shared Repository Instance

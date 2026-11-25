@@ -38,4 +38,9 @@ export const adminService = {
 
         return response.data;
     },
+
+    async getProjects(params = {}) {
+        return api.get("/admin/projects", { params });
+    },
+
 };

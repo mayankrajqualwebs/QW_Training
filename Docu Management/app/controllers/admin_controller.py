@@ -14,6 +14,7 @@ from app.schemas.admin import (
     AdminUserListResponse,
     AdminUserRoleUpdate,
     AdminUserRoleResponse,
+    AdminProjectListResponse,
 )
 
 
@@ -92,3 +93,48 @@ async def update_admin_user_role(
         platform_role=payload.platform_role,
         current_admin_id=admin.id,
     )
+   
+    
+# -------------------------------------------------------------
+# Platform Projects Management
+# -------------------------------------------------------------
+
+@router.get(
+    "/projects",
+    response_model=AdminProjectListResponse,
+)
+async def get_admin_projects(
+    search: str | None = Query(default=None, max_length=100),
+    organization_id: str | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    current_admin=Depends(get_current_admin),
+):
+    result = await admin_service.get_projects(
+        search=search,
+        organization_id=organization_id,
+        page=page,
+        page_size=page_size,
+    )
+
+    projects = []
+
+    for project in result["projects"]:
+        projects.append({
+            "id": project.id,
+            "name": project.name,
+            "slug": project.slug,
+            "organization_id": project.organizationId,
+            "organization": {
+                "id": project.organization.id,
+                "name": project.organization.name,
+            },
+            "created_at": project.createdAt,
+        })
+
+    return {
+        "projects": projects,
+        "total": result["total"],
+        "page": result["page"],
+        "page_size": result["page_size"],
+    }

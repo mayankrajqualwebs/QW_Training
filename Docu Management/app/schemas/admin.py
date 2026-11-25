@@ -84,3 +84,30 @@ class AdminUserRoleResponse(BaseModel):
     id: str
     email: str
     platform_role: str
+
+
+class AdminProjectOrganization(BaseModel):
+    """Organization details displayed in the admin project list."""
+
+    id: str
+    name: str
+
+
+class AdminProjectItem(BaseModel):
+    """Project information for platform administrators."""
+
+    id: str
+    name: str
+    slug: str
+    organization_id: str
+    organization: AdminProjectOrganization
+    created_at: datetime
+
+
+class AdminProjectListResponse(BaseModel):
+    """Paginated platform-wide project listing."""
+
+    projects: list[AdminProjectItem]
+    total: int
+    page: int
+    page_size: int
