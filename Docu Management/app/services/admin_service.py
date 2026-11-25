@@ -316,6 +316,69 @@ class AdminService:
             "page_size": page_size,
         }
 
+    # -------------------------------------------------------------
+    # Platform API Key Management
+    # -------------------------------------------------------------
+
+    async def get_api_keys(
+        self,
+        search: str | None = None,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        status: str | None = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict:
+        from app.repositories.api_key_repository import api_key_repository
+
+        skip = (page - 1) * page_size
+
+        keys, total = await asyncio.gather(
+            admin_repository.list_all_api_keys(
+                search=search,
+                organization_id=organization_id,
+                project_id=project_id,
+                status=status,
+                skip=skip,
+                take=page_size,
+            ),
+            admin_repository.count_all_api_keys(
+                search=search,
+                organization_id=organization_id,
+                project_id=project_id,
+                status=status,
+            ),
+        )
+
+        return {
+            "api_keys": keys,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        }
+
+    async def revoke_api_key(
+        self,
+        api_key_id: str,
+    ) -> None:
+        from datetime import datetime, timezone
+        from app.repositories.api_key_repository import api_key_repository
+
+        key = await api_key_repository.get_by_id(api_key_id)
+
+        if key is None:
+            raise HTTPException(
+                status_code=404,
+                detail="API key not found",
+            )
+
+        # Keep revocation idempotent.
+        if key.revokedAt is None:
+            await api_key_repository.soft_revoke(
+                api_key_id=api_key_id,
+                revoked_at=datetime.now(timezone.utc),
+            )
+
 
 
 

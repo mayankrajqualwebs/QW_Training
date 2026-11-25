@@ -141,3 +141,32 @@ class AdminDocumentListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+class AdminApiKeyItem(BaseModel):
+    id: str
+    name: str
+    key_prefix: str
+    key_suffix: str | None = None
+    scopes: list[str]
+
+    status: str
+    expires_at: datetime | None = None
+    last_used_at: datetime | None = None
+    revoked_at: datetime | None = None
+    created_at: datetime
+
+    project_id: str
+    project_name: str
+
+    organization_id: str
+    organization_name: str
+
+    created_by_id: str
+    created_by_email: str
+
+
+class AdminApiKeyListResponse(BaseModel):
+    api_keys: list[AdminApiKeyItem]
+    total: int
+    page: int
+    page_size: int

@@ -149,6 +149,106 @@ class AdminRepository:
             data={"platformRole": platform_role},
         )
 
+    # -------------------------------------------------------------
+    # Platform API Key Management
+    # -------------------------------------------------------------
+
+    def _api_key_filters(
+        self,
+        search: str | None = None,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        status: str | None = None,
+    ) -> dict:
+        from datetime import datetime, timezone
+
+        where = {}
+
+        if search and search.strip():
+            term = search.strip()
+            where["OR"] = [
+                {"name": {"contains": term, "mode": "insensitive"}},
+                {"keyPrefix": {"contains": term, "mode": "insensitive"}},
+                {"keySuffix": {"contains": term, "mode": "insensitive"}},
+            ]
+
+        if project_id:
+            where["projectId"] = project_id
+
+        if organization_id:
+            where["project"] = {
+                "organizationId": organization_id,
+            }
+
+        now = datetime.now(timezone.utc)
+
+        if status == "active":
+            where["revokedAt"] = None
+            where["AND"] = [
+                {
+                    "OR": [
+                        {"expiresAt": None},
+                        {"expiresAt": {"gt": now}},
+                    ]
+                }
+            ]
+
+        elif status == "revoked":
+            where["revokedAt"] = {"not": None}
+
+        elif status == "expired":
+            where["revokedAt"] = None
+            where["expiresAt"] = {"lte": now}
+
+        return where
+
+    async def list_all_api_keys(
+        self,
+        search: str | None = None,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        status: str | None = None,
+        skip: int = 0,
+        take: int = 20,
+    ):
+        where = self._api_key_filters(
+            search=search,
+            organization_id=organization_id,
+            project_id=project_id,
+            status=status,
+        )
+
+        return await prisma.apikey.find_many(
+            where=where,
+            skip=skip,
+            take=take,
+            order={"createdAt": "desc"},
+            include={
+                "project": {
+                    "include": {
+                        "organization": True,
+                    },
+                },
+                "createdBy": True,
+            },
+        )
+
+    async def count_all_api_keys(
+        self,
+        search: str | None = None,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        status: str | None = None,
+    ) -> int:
+        where = self._api_key_filters(
+            search=search,
+            organization_id=organization_id,
+            project_id=project_id,
+            status=status,
+        )
+
+        return await prisma.apikey.count(where=where)
+
 
 
 

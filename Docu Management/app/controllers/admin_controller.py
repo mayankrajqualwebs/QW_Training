@@ -18,6 +18,8 @@ from app.schemas.admin import (
     AdminOrganizationOption,
     AdminDocumentItem,
     AdminDocumentListResponse,
+    AdminApiKeyItem,
+    AdminApiKeyListResponse,
 )
 
 
@@ -215,3 +217,86 @@ async def get_admin_documents(
         "page": result["page"],
         "page_size": result["page_size"],
     }
+
+# -------------------------------------------------------------
+# Platform API Key Management
+# -------------------------------------------------------------
+
+@router.get(
+    "/api-keys",
+    response_model=AdminApiKeyListResponse,
+)
+async def get_admin_api_keys(
+    search: str | None = Query(default=None, max_length=255),
+    organization_id: str | None = Query(default=None),
+    project_id: str | None = Query(default=None),
+    status: str | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    admin=Depends(get_current_admin),
+):
+    if status and status not in {"active", "revoked", "expired"}:
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid API key status filter",
+        )
+
+    result = await admin_service.get_api_keys(
+        search=search,
+        organization_id=organization_id,
+        project_id=project_id,
+        status=status,
+        page=page,
+        page_size=page_size,
+    )
+
+    now = datetime.now(timezone.utc)
+    api_keys = []
+
+    for key in result["api_keys"]:
+        if key.revokedAt is not None:
+            key_status = "revoked"
+        elif key.expiresAt is not None and key.expiresAt <= now:
+            key_status = "expired"
+        else:
+            key_status = "active"
+
+        api_keys.append({
+            "id": key.id,
+            "name": key.name,
+            "key_prefix": key.keyPrefix,
+            "key_suffix": key.keySuffix,
+            "scopes": key.scopes,
+            "status": key_status,
+            "expires_at": key.expiresAt,
+            "last_used_at": key.lastUsedAt,
+            "revoked_at": key.revokedAt,
+            "created_at": key.createdAt,
+            "project_id": key.projectId,
+            "project_name": key.project.name,
+            "organization_id": key.project.organizationId,
+            "organization_name": key.project.organization.name,
+            "created_by_id": key.createdById,
+            "created_by_email": key.createdBy.email,
+        })
+
+    return {
+        "api_keys": api_keys,
+        "total": result["total"],
+        "page": result["page"],
+        "page_size": result["page_size"],
+    }
+
+
+@router.delete(
+    "/api-keys/{api_key_id}",
+    status_code=204,
+)
+async def revoke_admin_api_key(
+    api_key_id: str,
+    admin=Depends(get_current_admin),
+):
+    await admin_service.revoke_api_key(api_key_id)
+    return None
