@@ -49,4 +49,13 @@ export const adminService = {
         return response.data;
     },
 
+    async getDocuments(params = {}) {
+        const response = await api.get("/admin/documents", {
+            params,
+        });
+
+        return response.data;
+    },
+
+
 };

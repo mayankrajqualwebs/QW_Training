@@ -24,6 +24,7 @@ import { PlaceholderPage } from "../pages/PlaceholderPage";
 import { AdminOverviewPage } from "../pages/AdminOverviewPage";
 import { AdminUsersPage } from "../pages/AdminUsersPage";
 import AdminProjectsPage from "../pages/AdminProjectsPage";
+import AdminDocumentsPage from "../pages/AdminDocumentsPage";
 
 function RoleRedirect() {
     const { user } = useAuth();
@@ -184,8 +185,7 @@ export function AppRoutes() {
                     path="projects" element={<AdminProjectsPage />}
                 />
                 <Route
-                    path="documents"
-                    element={<PlaceholderPage title="Document Management" />}
+                    path="documents" element={<AdminDocumentsPage />}
                 />
                 <Route
                     path="api-keys"

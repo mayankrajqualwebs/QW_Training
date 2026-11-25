@@ -115,3 +115,29 @@ class AdminProjectListResponse(BaseModel):
 class AdminOrganizationOption(BaseModel):
     id: str
     name: str
+
+
+class AdminDocumentItem(BaseModel):
+    id: str
+    name: str
+    original_name: str
+    content_type: str
+    size: int
+    status: str
+    current_version: int
+
+    project_id: str
+    project_name: str
+
+    organization_id: str
+    organization_name: str
+
+    uploaded_by_id: str
+    created_at: datetime
+
+
+class AdminDocumentListResponse(BaseModel):
+    documents: list[AdminDocumentItem]
+    total: int
+    page: int
+    page_size: int

@@ -11,6 +11,7 @@ from fastapi import HTTPException
 from app.repositories.admin_repository import admin_repository
 from app.repositories.project_repository import project_repository
 from app.repositories.organization_repository import organization_repository
+from app.repositories.file_repository import file_repository
 
 class AdminService:
     """Service for Admin Console dashboard operations."""
@@ -282,6 +283,38 @@ class AdminService:
     
     async def get_all_organizations(self):
         return await organization_repository.list_all_organizations()
+
+
+    async def get_documents(
+        self,
+        search: str | None = None,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        page: int = 1,
+        page_size: int = 20,
+    ):
+        skip = (page - 1) * page_size
+
+        documents = await file_repository.list_all_files(
+            search=search,
+            organization_id=organization_id,
+            project_id=project_id,
+            skip=skip,
+            take=page_size,
+        )
+
+        total = await file_repository.count_all_files(
+            search=search,
+            organization_id=organization_id,
+            project_id=project_id,
+        )
+
+        return {
+            "documents": documents,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        }
 
 
 

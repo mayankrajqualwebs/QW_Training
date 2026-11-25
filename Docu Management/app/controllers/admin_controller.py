@@ -16,6 +16,8 @@ from app.schemas.admin import (
     AdminUserRoleResponse,
     AdminProjectListResponse,
     AdminOrganizationOption,
+    AdminDocumentItem,
+    AdminDocumentListResponse,
 )
 
 
@@ -162,3 +164,54 @@ async def get_admin_organizations(
         }
         for organization in organizations
     ]
+
+
+# -------------------------------------------------------------
+# Platform Documents Management
+# -------------------------------------------------------------
+
+@router.get(
+    "/documents",
+    response_model=AdminDocumentListResponse,
+)
+async def get_admin_documents(
+    search: str | None = Query(default=None, max_length=255),
+    organization_id: str | None = Query(default=None),
+    project_id: str | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    admin=Depends(get_current_admin),
+):
+    result = await admin_service.get_documents(
+        search=search,
+        organization_id=organization_id,
+        project_id=project_id,
+        page=page,
+        page_size=page_size,
+    )
+
+    documents = []
+
+    for file in result["documents"]:
+        documents.append({
+            "id": file.id,
+            "name": file.name,
+            "original_name": file.originalName,
+            "content_type": file.contentType,
+            "size": file.size,
+            "status": str(file.status),
+            "current_version": file.currentVersion,
+            "project_id": file.projectId,
+            "project_name": file.project.name,
+            "organization_id": file.project.organizationId,
+            "organization_name": file.project.organization.name,
+            "uploaded_by_id": file.uploadedById,
+            "created_at": file.createdAt,
+        })
+
+    return {
+        "documents": documents,
+        "total": result["total"],
+        "page": result["page"],
+        "page_size": result["page_size"],
+    }
