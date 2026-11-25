@@ -22,6 +22,7 @@ import { AnalyticsPage } from "../pages/AnalyticsPage";
 import { SettingsPage } from "../pages/SettingsPage";
 import { PlaceholderPage } from "../pages/PlaceholderPage";
 import { AdminOverviewPage } from "../pages/AdminOverviewPage";
+import { AdminUsersPage } from "../pages/AdminUsersPage";
 
 function RoleRedirect() {
     const { user } = useAuth();
@@ -172,8 +173,7 @@ export function AppRoutes() {
                     element={<AdminOverviewPage />}
                 />
                 <Route
-                    path="users"
-                    element={<PlaceholderPage title="User Management" />}
+                    path="users" element={<AdminUsersPage />}
                 />
                 <Route
                     path="projects"

@@ -52,3 +52,35 @@ class AdminActivityResponse(BaseModel):
     recent_users: list[AdminRecentUser]
     recent_documents: list[AdminRecentDocument]
     recent_requests: list[AdminRecentRequest]
+
+
+class AdminUserItem(BaseModel):
+    """A user record displayed in Admin User Management."""
+
+    id: str
+    email: str
+    platform_role: str
+    created_at: datetime
+
+
+class AdminUserListResponse(BaseModel):
+    """Paginated list of platform users."""
+
+    users: list[AdminUserItem]
+    total: int
+    page: int
+    page_size: int
+
+
+class AdminUserRoleUpdate(BaseModel):
+    """Request body for changing a user's platform role."""
+
+    platform_role: str
+
+
+class AdminUserRoleResponse(BaseModel):
+    """Result of a platform role update."""
+
+    id: str
+    email: str
+    platform_role: str
