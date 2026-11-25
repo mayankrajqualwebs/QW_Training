@@ -10,6 +10,7 @@ import asyncio
 from fastapi import HTTPException
 from app.repositories.admin_repository import admin_repository
 from app.repositories.project_repository import project_repository
+from app.repositories.organization_repository import organization_repository
 
 class AdminService:
     """Service for Admin Console dashboard operations."""
@@ -278,7 +279,9 @@ class AdminService:
             "page": page,
             "page_size": page_size,
         }
-
+    
+    async def get_all_organizations(self):
+        return await organization_repository.list_all_organizations()
 
 
 

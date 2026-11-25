@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useState } from "react";
 import {
     FolderKanban,
@@ -14,28 +15,42 @@ import { adminService } from "../services/adminService";
 const PAGE_SIZE = 20;
 
 export default function AdminProjectsPage() {
+    // -------------------------------------------------------------
+    // State
+    // -------------------------------------------------------------
+
     const [projects, setProjects] = useState([]);
+    const [organizations, setOrganizations] = useState([]);
+
     const [search, setSearch] = useState("");
+    const [organizationId, setOrganizationId] = useState("");
+
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    const totalPages = Math.max(
+        1,
+        Math.ceil(total / PAGE_SIZE)
+    );
+
+    // -------------------------------------------------------------
+    // Load Projects
+    // -------------------------------------------------------------
 
     const loadProjects = useCallback(async () => {
         setLoading(true);
         setError("");
 
         try {
-            const response = await adminService.getProjects({
+            const data = await adminService.getProjects({
                 search: search.trim() || undefined,
+                organization_id: organizationId || undefined,
                 page,
                 page_size: PAGE_SIZE,
             });
-
-            const data = response.data;
 
             setProjects(data.projects ?? []);
             setTotal(data.total ?? 0);
@@ -47,28 +62,59 @@ export default function AdminProjectsPage() {
         } finally {
             setLoading(false);
         }
-    }, [search, page]);
+    }, [search, organizationId, page]);
 
     useEffect(() => {
         loadProjects();
     }, [loadProjects]);
+
+    // -------------------------------------------------------------
+    // Load Organizations
+    // -------------------------------------------------------------
+
+    const loadOrganizations = useCallback(async () => {
+        try {
+            const data = await adminService.getOrganizations();
+
+            setOrganizations(data ?? []);
+        } catch (err) {
+            console.error(
+                "Failed to load organizations:",
+                err
+            );
+        }
+    }, []);
+
+    useEffect(() => {
+        loadOrganizations();
+    }, [loadOrganizations]);
+
+    // -------------------------------------------------------------
+    // Search Handler
+    // -------------------------------------------------------------
 
     const handleSearchChange = (value) => {
         setSearch(value);
         setPage(1);
     };
 
+    // -------------------------------------------------------------
+    // Organization Filter Handler
+    // -------------------------------------------------------------
+
+    const handleOrganizationChange = (value) => {
+        setOrganizationId(value);
+        setPage(1);
+    };
+
+    // -------------------------------------------------------------
+    // Render
+    // -------------------------------------------------------------
 
     return (
         <div className="admin-projects">
+            {/* Header */}
             <div className="admin-projects-header">
-                {/* <div>
-                    <h1>Projects Management</h1>
-                    <p>
-                        Manage and monitor projects across all organizations.
-                    </p>
-                </div> */}
-
                 <button
                     className="btn-secondary"
                     onClick={loadProjects}
@@ -82,6 +128,7 @@ export default function AdminProjectsPage() {
                 </button>
             </div>
 
+            {/* Error */}
             {error && (
                 <Alert
                     type="error"
@@ -89,7 +136,9 @@ export default function AdminProjectsPage() {
                 />
             )}
 
+            {/* Search and Filters */}
             <div className="admin-projects-toolbar">
+                {/* Search */}
                 <div className="admin-projects-search">
                     <Search size={17} />
 
@@ -103,12 +152,36 @@ export default function AdminProjectsPage() {
                     />
                 </div>
 
+                {/* Organization Filter */}
+                <select
+                    className="admin-projects-organization-filter"
+                    value={organizationId}
+                    onChange={(event) =>
+                        handleOrganizationChange(event.target.value)
+                    }
+                >
+                    <option value="">
+                        All Organizations
+                    </option>
+
+                    {organizations.map((organization) => (
+                        <option
+                            key={organization.id}
+                            value={organization.id}
+                        >
+                            {organization.name}
+                        </option>
+                    ))}
+                </select>
+
+                {/* Project Count */}
                 <div className="admin-projects-count">
                     <FolderKanban size={17} />
                     <span>{total} projects</span>
                 </div>
             </div>
 
+            {/* Projects Table */}
             <div className="admin-projects-table-card">
                 <div className="admin-projects-table-wrapper">
                     <table className="admin-projects-table">
@@ -137,8 +210,8 @@ export default function AdminProjectsPage() {
                                             icon={FolderKanban}
                                             title="No projects found"
                                             description={
-                                                search
-                                                    ? "Try adjusting your search."
+                                                search || organizationId
+                                                    ? "Try changing your search or organization filter."
                                                     : "There are no projects on the platform yet."
                                             }
                                         />
@@ -147,6 +220,7 @@ export default function AdminProjectsPage() {
                             ) : (
                                 projects.map((project) => (
                                     <tr key={project.id}>
+                                        {/* Project */}
                                         <td>
                                             <div className="admin-project-name">
                                                 <div className="admin-project-icon">
@@ -165,18 +239,21 @@ export default function AdminProjectsPage() {
                                             </div>
                                         </td>
 
+                                        {/* Organization */}
                                         <td>
                                             <span className="admin-project-organization">
                                                 {project.organization?.name || "—"}
                                             </span>
                                         </td>
 
+                                        {/* Project ID */}
                                         <td>
                                             <code className="admin-project-id">
                                                 {project.id}
                                             </code>
                                         </td>
 
+                                        {/* Created Date */}
                                         <td>
                                             {project.created_at
                                                 ? new Date(
@@ -191,11 +268,13 @@ export default function AdminProjectsPage() {
                     </table>
                 </div>
 
+                {/* Pagination */}
                 <div className="admin-projects-pagination">
                     <span>
                         {total === 0
                             ? "Showing 0 projects"
-                            : `Showing ${(page - 1) * PAGE_SIZE + 1}–${Math.min(
+                            : `Showing ${(page - 1) * PAGE_SIZE + 1
+                            }–${Math.min(
                                 page * PAGE_SIZE,
                                 total
                             )} of ${total}`}
@@ -205,7 +284,9 @@ export default function AdminProjectsPage() {
                         <button
                             className="btn-secondary"
                             disabled={page <= 1 || loading}
-                            onClick={() => setPage((current) => current - 1)}
+                            onClick={() =>
+                                setPage((current) => current - 1)
+                            }
                         >
                             <ChevronLeft size={16} />
                             Previous
@@ -218,7 +299,9 @@ export default function AdminProjectsPage() {
                         <button
                             className="btn-secondary"
                             disabled={page >= totalPages || loading}
-                            onClick={() => setPage((current) => current + 1)}
+                            onClick={() =>
+                                setPage((current) => current + 1)
+                            }
                         >
                             Next
                             <ChevronRight size={16} />
@@ -228,5 +311,4 @@ export default function AdminProjectsPage() {
             </div>
         </div>
     );
-
 }

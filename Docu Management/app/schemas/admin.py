@@ -111,3 +111,7 @@ class AdminProjectListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+class AdminOrganizationOption(BaseModel):
+    id: str
+    name: str

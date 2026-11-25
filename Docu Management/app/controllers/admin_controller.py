@@ -15,6 +15,7 @@ from app.schemas.admin import (
     AdminUserRoleUpdate,
     AdminUserRoleResponse,
     AdminProjectListResponse,
+    AdminOrganizationOption,
 )
 
 
@@ -93,8 +94,8 @@ async def update_admin_user_role(
         platform_role=payload.platform_role,
         current_admin_id=admin.id,
     )
-   
-    
+
+
 # -------------------------------------------------------------
 # Platform Projects Management
 # -------------------------------------------------------------
@@ -138,3 +139,26 @@ async def get_admin_projects(
         "page": result["page"],
         "page_size": result["page_size"],
     }
+
+# -------------------------------------------------------------
+# Platform Organizations
+# -------------------------------------------------------------
+
+@router.get(
+    "/organizations",
+    response_model=list[AdminOrganizationOption],
+)
+async def get_admin_organizations(
+    admin=Depends(get_current_admin),
+):
+    """Retrieve all organizations for platform administration."""
+
+    organizations = await admin_service.get_all_organizations()
+
+    return [
+        {
+            "id": organization.id,
+            "name": organization.name,
+        }
+        for organization in organizations
+    ]

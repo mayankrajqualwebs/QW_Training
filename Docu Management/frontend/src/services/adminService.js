@@ -40,7 +40,13 @@ export const adminService = {
     },
 
     async getProjects(params = {}) {
-        return api.get("/admin/projects", { params });
+        const response = await api.get("/admin/projects", { params });
+        return response.data;
+    },
+
+    async getOrganizations() {
+        const response = await api.get("/admin/organizations");
+        return response.data;
     },
 
 };

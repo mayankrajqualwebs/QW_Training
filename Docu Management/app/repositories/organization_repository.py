@@ -49,5 +49,10 @@ class OrganizationRepository:
 
         return organization
 
+    async def list_all_organizations(self):
+        return await prisma.organization.find_many(
+            order={"name": "asc"},
+        )
+
 
 organization_repository = OrganizationRepository()
