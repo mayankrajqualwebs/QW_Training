@@ -2596,3 +2596,207 @@ td code {
   background: #0d625b;
   border-color: #0d625b;
 }
+
+/*Project Managment*/
+
+.admin-projects {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--admin-text, #172033);
+}
+
+.admin-projects-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.admin-projects-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--admin-text, #172033);
+}
+
+.admin-projects-header p {
+  margin: 6px 0 0;
+  color: var(--admin-muted, #64748b);
+  font-size: 14px;
+}
+
+.admin-projects-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-projects-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 380px;
+  padding: 10px 14px;
+  background: var(--admin-surface, #ffffff);
+  border: 1px solid var(--admin-border, #e2e8f0);
+  border-radius: 9px;
+  color: var(--admin-muted, #64748b);
+}
+
+.admin-projects-search:focus-within {
+  border-color: var(--admin-primary, #0f766e);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+}
+
+.admin-projects-search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--admin-text, #172033);
+  font-size: 14px;
+}
+
+.admin-projects-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--admin-muted, #64748b);
+  font-size: 14px;
+}
+
+.admin-projects-table-card {
+  overflow: hidden;
+  background: var(--admin-surface, #ffffff);
+  border: 1px solid var(--admin-border, #e2e8f0);
+  border-radius: 12px;
+}
+
+.admin-projects-table-wrapper {
+  overflow-x: auto;
+}
+
+.admin-projects-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.admin-projects-table thead {
+  background: var(--admin-table-header, #f8fafc);
+}
+
+.admin-projects-table th {
+  padding: 14px 18px;
+  color: var(--admin-muted, #64748b);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.admin-projects-table td {
+  padding: 16px 18px;
+  border-top: 1px solid var(--admin-border, #e2e8f0);
+  color: var(--admin-text, #172033);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.admin-projects-table tbody tr:hover {
+  background: var(--admin-row-hover, #f8fafc);
+}
+
+.admin-project-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-project-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: rgba(15, 118, 110, 0.1);
+  color: var(--admin-primary, #0f766e);
+}
+
+.admin-project-title {
+  display: block;
+  font-weight: 600;
+  color: var(--admin-text, #172033);
+}
+
+.admin-project-slug {
+  display: block;
+  margin-top: 4px;
+  color: var(--admin-muted, #64748b);
+  font-size: 12px;
+}
+
+.admin-project-organization {
+  font-weight: 500;
+}
+
+.admin-project-id {
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: var(--admin-code-bg, #f1f5f9);
+  color: var(--admin-muted, #64748b);
+  font-size: 12px;
+}
+
+.admin-projects-loading {
+  padding: 36px;
+  text-align: center;
+  color: var(--admin-muted, #64748b);
+}
+
+.admin-projects-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-top: 1px solid var(--admin-border, #e2e8f0);
+  color: var(--admin-muted, #64748b);
+  font-size: 13px;
+}
+
+.admin-projects-pagination-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-projects-page-number {
+  color: var(--admin-text, #172033);
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+
+  .admin-projects-header,
+  .admin-projects-toolbar,
+  .admin-projects-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-projects-pagination-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .admin-projects-search {
+    max-width: none;
+  }
+}
