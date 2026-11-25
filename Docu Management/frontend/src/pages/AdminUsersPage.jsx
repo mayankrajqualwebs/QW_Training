@@ -12,6 +12,8 @@ import {
 
 import { Alert } from "../components/Alert";
 import { adminService } from "../services/adminService";
+import { useAuth } from "../hooks/useAuth";
+import { Modal } from "../components/Modal";
 
 const PAGE_SIZE = 20;
 
@@ -47,6 +49,9 @@ export function AdminUsersPage() {
     const [notice, setNotice] = useState("");
 
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    const { user: currentUser } = useAuth();
+
+    const [selectedUser, setSelectedUser] = useState(null);
 
     const loadUsers = useCallback(async () => {
         setLoading(true);
@@ -85,21 +90,13 @@ export function AdminUsersPage() {
         setNotice("");
     }
 
-    async function handleRoleChange(user) {
+    async function confirmRoleChange() {
+        if (!selectedUser) return;
+
+        const user = selectedUser;
+
         const newRole =
             user.platform_role === "ADMIN" ? "USER" : "ADMIN";
-
-        const action =
-            newRole === "ADMIN" ? "promote" : "demote";
-
-        const confirmed = window.confirm(
-            `Are you sure you want to ${action} ${user.email} ${newRole === "ADMIN"
-                ? "to ADMIN"
-                : "to USER"
-            }?`
-        );
-
-        if (!confirmed) return;
 
         setUpdatingUserId(user.id);
         setError("");
@@ -107,6 +104,8 @@ export function AdminUsersPage() {
 
         try {
             await adminService.updateUserRole(user.id, newRole);
+
+            setSelectedUser(null);
 
             setNotice(
                 `${user.email} was successfully changed to ${newRole}.`
@@ -225,6 +224,9 @@ export function AdminUsersPage() {
                                     const isAdmin =
                                         user.platform_role === "ADMIN";
 
+                                    const isCurrentUser = user.id === currentUser?.id;
+                                    const cannotDemoteSelf = isAdmin && isCurrentUser;
+
                                     const isUpdating =
                                         updatingUserId === user.id;
 
@@ -245,8 +247,8 @@ export function AdminUsersPage() {
                                             <td>
                                                 <span
                                                     className={`admin-user-role ${isAdmin
-                                                            ? "admin-role-admin"
-                                                            : "admin-role-user"
+                                                        ? "admin-role-admin"
+                                                        : "admin-role-user"
                                                         }`}
                                                 >
                                                     {isAdmin ? (
@@ -266,21 +268,22 @@ export function AdminUsersPage() {
                                             <td>
                                                 <button
                                                     className={`admin-user-action ${isAdmin
-                                                            ? "admin-user-demote"
-                                                            : "admin-user-promote"
+                                                        ? "admin-user-demote"
+                                                        : "admin-user-promote"
                                                         }`}
-                                                    onClick={() =>
-                                                        handleRoleChange(user)
-                                                    }
-                                                    disabled={
-                                                        Boolean(updatingUserId)
+                                                    onClick={() => setSelectedUser(user)}
+                                                    disabled={Boolean(updatingUserId) || cannotDemoteSelf}
+                                                    title={
+                                                        cannotDemoteSelf
+                                                            ? "You cannot demote your own administrator account"
+                                                            : undefined
                                                     }
                                                 >
-                                                    {isUpdating
-                                                        ? "Updating..."
-                                                        : isAdmin
-                                                            ? "Demote"
-                                                            : "Promote"}
+                                                    {isAdmin
+                                                        ? cannotDemoteSelf
+                                                            ? "Your Account"
+                                                            : "Demote"
+                                                        : "Promote"}
                                                 </button>
                                             </td>
                                         </tr>
@@ -328,6 +331,73 @@ export function AdminUsersPage() {
                     </div>
                 </div>
             </div>
+            {selectedUser && (
+                <Modal
+                    title={
+                        selectedUser.platform_role === "ADMIN"
+                            ? "Demote Administrator"
+                            : "Promote to Administrator"
+                    }
+                    onClose={() => setSelectedUser(null)}
+                >
+                    <div className="admin-role-modal">
+                        <p>
+                            You are about to change the platform role of:
+                        </p>
+
+                        <div className="admin-role-modal-user">
+                            <div className="admin-user-avatar">
+                                {selectedUser.email
+                                    .charAt(0)
+                                    .toUpperCase()}
+                            </div>
+
+                            <div>
+                                <strong>{selectedUser.email}</strong>
+                                <span>
+                                    Current role: {selectedUser.platform_role}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="admin-role-modal-change">
+                            <span>New role</span>
+
+                            <strong>
+                                {selectedUser.platform_role === "ADMIN"
+                                    ? "USER"
+                                    : "ADMIN"}
+                            </strong>
+                        </div>
+
+                        <p className="admin-role-modal-warning">
+                            {selectedUser.platform_role === "ADMIN"
+                                ? "This user will lose access to the Admin Console."
+                                : "This user will gain access to the Admin Console and platform-wide management features."}
+                        </p>
+
+                        <div className="modal-actions">
+                            <button
+                                className="btn-secondary"
+                                onClick={() => setSelectedUser(null)}
+                                disabled={Boolean(updatingUserId)}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                className="btn-primary"
+                                onClick={confirmRoleChange}
+                                disabled={Boolean(updatingUserId)}
+                            >
+                                {updatingUserId
+                                    ? "Updating..."
+                                    : "Confirm Change"}
+                            </button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
         </section>
     );
 }

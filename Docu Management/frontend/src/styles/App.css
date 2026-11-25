@@ -2536,3 +2536,63 @@ td code {
     flex-direction: column;
   }
 }
+
+
+/* Role confirmation modal */
+.admin-role-modal {
+  color: var(--admin-text, #172033);
+  background: var(--admin-surface, #ffffff);
+}
+
+/* Modal heading */
+.admin-role-modal .modal-heading {
+  border-bottom: 1px solid var(--admin-border, #e2e8f0);
+}
+
+.admin-role-modal .modal-heading h2 {
+  color: var(--admin-primary, #0f766e);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+/* User identity section */
+.admin-role-modal .user-avatar {
+  background: rgba(20, 184, 166, 0.12);
+  color: var(--admin-primary, #0f766e);
+}
+
+.admin-role-modal .user-email {
+  color: var(--admin-text, #172033);
+  font-weight: 600;
+}
+
+.admin-role-modal .role-label {
+  color: var(--admin-muted, #64748b);
+}
+
+.admin-role-modal .role-value {
+  color: var(--admin-secondary, #1e293b);
+  font-weight: 600;
+}
+
+/* Modal action buttons */
+.admin-role-modal .modal-actions .btn-secondary {
+  background: #ffffff;
+  color: var(--admin-secondary, #1e293b);
+  border: 1px solid var(--admin-border, #cbd5e1);
+}
+
+.admin-role-modal .modal-actions .btn-secondary:hover {
+  background: #f1f5f9;
+}
+
+.admin-role-modal .modal-actions .btn-primary {
+  background: var(--admin-primary, #0f766e);
+  color: #ffffff;
+  border: 1px solid var(--admin-primary, #0f766e);
+}
+
+.admin-role-modal .modal-actions .btn-primary:hover {
+  background: #0d625b;
+  border-color: #0d625b;
+}
