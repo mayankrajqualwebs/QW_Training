@@ -28,6 +28,12 @@ class ProjectController:
         user: Any,
     ) -> ProjectResponse:
         """Handles project creation requests within an organization."""
+        role_val = getattr(user.platformRole, "value", str(user.platformRole)) if hasattr(user, "platformRole") else "USER"
+        if role_val != "ADMIN":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Regular users cannot create projects. Contact an administrator.",
+            )
         try:
             return await self.service.create_project(
                 organization_id=organization_id,

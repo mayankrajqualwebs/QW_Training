@@ -29,6 +29,12 @@ class OrganizationController:
         user: Any,
     ) -> OrganizationResponse:
         """Handles organization creation requests."""
+        role_val = getattr(user.platformRole, "value", str(user.platformRole)) if hasattr(user, "platformRole") else "USER"
+        if role_val != "ADMIN":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Regular users cannot create organizations. Contact an administrator.",
+            )
         try:
             return await self.service.create_organization(
                 data=data,
