@@ -40,7 +40,10 @@ export const adminService = {
     },
 
     async getProjects(params = {}) {
-        const response = await api.get("/admin/projects", { params });
+        const response = await api.get("/admin/projects", {
+            params,
+        });
+
         return response.data;
     },
 
@@ -69,5 +72,29 @@ export const adminService = {
         await api.delete(`/admin/api-keys/${apiKeyId}`);
     },
 
+    // ---------------------------------------------------------
+    // API Monitoring
+    // ---------------------------------------------------------
 
+    async getMonitoringSummary(days = 7) {
+        const response = await api.get(
+            "/admin/monitoring/summary",
+            {
+                params: { days },
+            }
+        );
+
+        return response.data;
+    },
+
+    async getMonitoringRequests(params = {}) {
+        const response = await api.get(
+            "/admin/monitoring/requests",
+            {
+                params,
+            }
+        );
+
+        return response.data;
+    },
 };

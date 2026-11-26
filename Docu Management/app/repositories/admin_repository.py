@@ -363,25 +363,22 @@ class AdminRepository:
             }
         )
 
-    async def get_average_request_latency(
-        self,
-        start_date: datetime,
-    ) -> float:
-        result = await prisma.requestlog.aggregate(
-            where={
-                "createdAt": {
-                    "gte": start_date,
-                },
-            },
-            _avg={
-                "latencyMs": True,
-            },
+    async def get_average_request_latency(self, start_date):
+        result = await prisma.query_raw(
+            """
+            SELECT AVG("latencyMs") AS "avgLatency"
+            FROM "RequestLog"
+            WHERE "createdAt" >= $1::timestamp
+            """,
+            start_date,
         )
 
-        average = result._avg.latencyMs
+        if not result:
+            return 0.0
+
+        average = result[0].get("avgLatency")
 
         return float(average or 0)
-
 
 
 admin_repository = AdminRepository()

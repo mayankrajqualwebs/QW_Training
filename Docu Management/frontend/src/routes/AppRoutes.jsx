@@ -26,6 +26,7 @@ import { AdminUsersPage } from "../pages/AdminUsersPage";
 import AdminProjectsPage from "../pages/AdminProjectsPage";
 import AdminDocumentsPage from "../pages/AdminDocumentsPage";
 import AdminApiKeysPage from "../pages/AdminApiKeysPage";
+import AdminMonitoringPage from "../pages/AdminMonitoringPage";
 
 function RoleRedirect() {
     const { user } = useAuth();
@@ -194,7 +195,7 @@ export function AppRoutes() {
                 />
                 <Route
                     path="monitoring"
-                    element={<PlaceholderPage title="API Monitoring" />}
+                    element={<AdminMonitoringPage />}
                 />
             </Route>
 
