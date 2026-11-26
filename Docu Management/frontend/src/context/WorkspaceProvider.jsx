@@ -20,10 +20,7 @@ import Modal from "../components/Modal";
 export function WorkspaceProvider({ children }) {
     const { user } = useAuth();
     const userId = user?.id;
-
     const refreshPromiseRef = useRef(null);
-
-    const [page, setPage] = useState("Overview");
     const [organizations, setOrganizations] = useState([]);
     const [organizationId, setOrganizationId] = useState("");
     const [projects, setProjects] = useState([]);
@@ -217,7 +214,6 @@ export function WorkspaceProvider({ children }) {
             setProjects([]);
             setKeys([]);
             setSummary(null);
-            setPage("Overview");
         }
     }, [userId, refreshWorkspace]);
 
@@ -293,7 +289,6 @@ export function WorkspaceProvider({ children }) {
             setProjects((items) => [project, ...items]);
             setProjectId(project.id);
             setShowProjectForm(false);
-            setPage("Projects");
             setNotice(`Project "${project.name}" created.`);
             return project;
         } catch (e) {
@@ -390,8 +385,6 @@ export function WorkspaceProvider({ children }) {
     return (
         <WorkspaceContext.Provider
             value={{
-                page,
-                setPage,
                 organizations,
                 organizationId,
                 setOrganizationId,

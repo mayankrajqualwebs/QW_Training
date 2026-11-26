@@ -1,29 +1,39 @@
+
 import { RefreshCw } from "lucide-react";
-import { useWorkspace } from "../hooks/useWorkspace";
 
-export function Topbar() {
-    const { page, refreshWorkspace } = useWorkspace();
-
+export function Topbar({
+    section = "Platform",
+    page,
+    onRefresh,
+    refreshing = false,
+}) {
     return (
         <header className="topbar">
             <div className="breadcrumb">
-                Platform <span>/</span> <strong>{page}</strong>
+                {section} <span>/</span> <strong>{page}</strong>
             </div>
+
             <div className="topbar-right">
                 <span className="online-pill healthy">
-                    <i /> API Workspace
+                    <i /> Connected
                 </span>
-                <button
-                    className="icon-button"
-                    title="Refresh data"
-                    onClick={() => void refreshWorkspace()}
-                >
-                    <RefreshCw size={17} />
-                </button>
+
+                {onRefresh && (
+                    <button
+                        className="icon-button"
+                        title="Refresh data"
+                        onClick={onRefresh}
+                        disabled={refreshing}
+                    >
+                        <RefreshCw
+                            size={17}
+                            className={refreshing ? "spin" : ""}
+                        />
+                    </button>
+                )}
             </div>
         </header>
     );
 }
 
 export default Topbar;
-

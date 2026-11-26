@@ -379,6 +379,104 @@ class FileRepository:
 
         return created_count
 
+    
+    async def list_all_files(
+        self,
+        search: str | None = None,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        skip: int = 0,
+        take: int = 20,
+    ):
+        where = {
+            "status": {"not": "DELETING"},
+        }
+
+        if search and search.strip():
+            search_term = search.strip()
+
+            where["OR"] = [
+                {
+                    "name": {
+                        "contains": search_term,
+                        "mode": "insensitive",
+                    }
+                },
+                {
+                    "originalName": {
+                        "contains": search_term,
+                        "mode": "insensitive",
+                    }
+                },
+            ]
+
+        if project_id:
+            where["projectId"] = project_id
+
+        if organization_id:
+            where["project"] = {
+                "organizationId": organization_id,
+            }
+
+        return await prisma.projectfile.find_many(
+            where=where,
+            include={
+                "project": {
+                    "include": {
+                        "organization": True,
+                    }
+                },
+                "uploadedBy": True,
+            },
+            skip=skip,
+            take=take,
+            order={
+                "createdAt": "desc",
+            },
+        )
+
+
+    async def count_all_files(
+        self,
+        search: str | None = None,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+    ) -> int:
+        where = {
+            "status": {"not": "DELETING"},
+        }
+
+        if search and search.strip():
+            search_term = search.strip()
+
+            where["OR"] = [
+                {
+                    "name": {
+                        "contains": search_term,
+                        "mode": "insensitive",
+                    }
+                },
+                {
+                    "originalName": {
+                        "contains": search_term,
+                        "mode": "insensitive",
+                    }
+                },
+            ]
+
+        if project_id:
+            where["projectId"] = project_id
+
+        if organization_id:
+            where["project"] = {
+                "organizationId": organization_id,
+            }
+
+        return await prisma.projectfile.count(
+            where=where,
+        )
+
+
 
 # ---------------------------------------------------------------------
 # Shared Repository Instance

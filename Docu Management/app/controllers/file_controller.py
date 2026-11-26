@@ -25,7 +25,7 @@ from app.schemas.file import (
 
 from app.services.file_service import FileService, file_service
 
-from app.exceptions.service_errors import (
+from app.services.exceptions import (
     ConflictError,
     ForbiddenError,
     NotFoundError,

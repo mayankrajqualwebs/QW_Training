@@ -10,7 +10,7 @@ from prisma.models import ApiKey
 from app.db.client import prisma
 
 
-class ApiKeyRepository:
+class ApiKeyRepository:     
     """Repository handling database operations for ApiKey records."""
 
     async def get_by_id(self, api_key_id: str) -> Optional[ApiKey]:

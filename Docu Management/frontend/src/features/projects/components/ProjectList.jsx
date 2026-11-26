@@ -1,11 +1,12 @@
 import { Copy } from "lucide-react";
 import { useWorkspace } from "../../../hooks/useWorkspace";
 import { useClipboard } from "../../../hooks/useClipboard";
-import { EmptyMessage } from "../../../components/EmptyMessage";
+import { useNavigate } from "react-router-dom";
 
 export function ProjectList() {
-    const { projects, projectId, setProjectId, setPage, setNotice } = useWorkspace();
+    const { projects, projectId, setProjectId, setNotice } = useWorkspace();
     const { copyToClipboard } = useClipboard();
+    const navigate = useNavigate();
 
     if (!projects.length) {
         return (
@@ -58,20 +59,11 @@ export function ProjectList() {
                             </td>
                             <td>
                                 <div style={{ display: "flex", gap: 6 }}>
-                                    {/* <button
-                                        className="secondary-button compact"
-                                        onClick={() => {
-                                            setProjectId(project.id);
-                                            setPage("Overview");
-                                        }}
-                                    >
-                                        Select & Open
-                                    </button> */}
                                     <button
                                         className="secondary-button compact"
                                         onClick={() => {
                                             setProjectId(project.id);
-                                            setPage("API Keys");
+                                            navigate("/workspace/api-access");
                                         }}
                                     >
                                         Keys

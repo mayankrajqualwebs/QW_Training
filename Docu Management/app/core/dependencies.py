@@ -55,3 +55,24 @@ async def get_current_user(
         raise credentials_error
 
     return user
+
+async def get_current_admin(
+    current_user=Depends(get_current_user),
+):
+    """
+    Ensures that the authenticated user has platform-level ADMIN access.
+    """
+
+    platform_role = current_user.platformRole
+
+    # Handle either a string or an enum value.
+    if hasattr(platform_role, "value"):
+        platform_role = platform_role.value
+
+    if platform_role != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+
+    return current_user

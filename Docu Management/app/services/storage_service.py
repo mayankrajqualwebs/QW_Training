@@ -57,6 +57,38 @@ class StorageService:
         )
 
     # -------------------------------------------------------------------------
+    # Upload File Content (Direct)
+    # -------------------------------------------------------------------------
+
+    async def upload_file_content(
+        self,
+        object_key: str,
+        content: bytes,
+        content_type: str,
+    ) -> None:
+        """Upload raw bytes directly to S3."""
+        await asyncio.to_thread(
+            self._upload_file_content_sync,
+            object_key,
+            content,
+            content_type,
+        )
+
+    def _upload_file_content_sync(
+        self,
+        object_key: str,
+        content: bytes,
+        content_type: str,
+    ) -> None:
+        """Synchronous implementation of direct S3 upload."""
+        s3_client.put_object(
+            Bucket=self.bucket,
+            Key=object_key,
+            Body=content,
+            ContentType=content_type,
+        )
+
+    # -------------------------------------------------------------------------
     # Download URL
     # -------------------------------------------------------------------------
 
