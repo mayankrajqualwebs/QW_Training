@@ -481,6 +481,76 @@ class AdminRepository:
 
         return await prisma.apikey.count(where=where)    
 
+    async def get_api_key_by_id(self, api_key_id: str):
+        """Fetch an API key record with its project, organization, and assigned user."""
+        return await prisma.apikey.find_unique(
+            where={"id": api_key_id},
+            include={
+                "project": {
+                    "include": {
+                        "organization": True,
+                    },
+                },
+                "createdBy": True,
+            },
+        )
+
+    async def create_api_key(
+        self,
+        name: str,
+        key_prefix: str,
+        key_suffix: str | None,
+        key_hash: str,
+        scopes: list[str],
+        project_id: str,
+        user_id: str,
+        expires_at: datetime | None,
+    ):
+        """Create and persist an API key record for platform administration."""
+        return await prisma.apikey.create(
+            data={
+                "name": name,
+                "keyPrefix": key_prefix,
+                "keySuffix": key_suffix,
+                "keyHash": key_hash,
+                "scopes": scopes,
+                "projectId": project_id,
+                "createdById": user_id,
+                "expiresAt": expires_at,
+            },
+            include={
+                "project": {
+                    "include": {
+                        "organization": True,
+                    },
+                },
+                "createdBy": True,
+            },
+        )
+
+    async def reassign_api_key_user(self, api_key_id: str, new_user_id: str):
+        """Transfer key ownership and assignment to another user."""
+        return await prisma.apikey.update(
+            where={"id": api_key_id},
+            data={"createdById": new_user_id},
+            include={
+                "project": {
+                    "include": {
+                        "organization": True,
+                    },
+                },
+                "createdBy": True,
+            },
+        )
+
+    async def get_organization_members(self, organization_id: str):
+        """List all members and their roles for an organization."""
+        return await prisma.membership.find_many(
+            where={"organizationId": organization_id},
+            include={"user": True},
+            order={"createdAt": "asc"},
+        )    
+
 
 
 

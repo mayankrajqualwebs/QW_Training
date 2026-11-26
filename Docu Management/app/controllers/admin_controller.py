@@ -29,6 +29,10 @@ from app.schemas.admin import (
     AdminDocumentDownloadResponse,
     AdminApiKeyItem,
     AdminApiKeyListResponse,
+    AdminApiKeyCreateRequest,
+    AdminApiKeyCreatedResponse,
+    AdminApiKeyReassignRequest,
+    AdminOrganizationMemberItem,
     AdminMonitoringSummary,
     AdminMonitoringRequestListResponse,
 )
@@ -461,6 +465,8 @@ async def get_admin_api_keys(
             "organization_name": key.project.organization.name,
             "created_by_id": key.createdById,
             "created_by_email": key.createdBy.email,
+            "assigned_user_id": key.createdById,
+            "assigned_user_email": key.createdBy.email,
         })
 
     return {
@@ -469,6 +475,42 @@ async def get_admin_api_keys(
         "page": result["page"],
         "page_size": result["page_size"],
     }
+
+
+@router.post(
+    "/api-keys",
+    response_model=AdminApiKeyCreatedResponse,
+    status_code=201,
+)
+async def create_admin_api_key(
+    payload: AdminApiKeyCreateRequest,
+    admin=Depends(get_current_admin),
+):
+    """Provision a new API key with user assignment and permission scopes."""
+    return await admin_service.create_api_key(
+        name=payload.name,
+        project_id=payload.project_id,
+        user_id=payload.user_id,
+        scopes=payload.scopes,
+        expires_at=payload.expires_at,
+        current_admin_id=admin.id,
+    )
+
+
+@router.patch(
+    "/api-keys/{api_key_id}/reassign",
+    response_model=AdminApiKeyItem,
+)
+async def reassign_admin_api_key(
+    api_key_id: str,
+    payload: AdminApiKeyReassignRequest,
+    admin=Depends(get_current_admin),
+):
+    """Reassign API key ownership and authorization to another eligible user."""
+    return await admin_service.reassign_api_key(
+        api_key_id=api_key_id,
+        new_user_id=payload.user_id,
+    )
 
 
 @router.delete(
@@ -481,6 +523,18 @@ async def revoke_admin_api_key(
 ):
     await admin_service.revoke_api_key(api_key_id)
     return None
+
+
+@router.get(
+    "/organizations/{organization_id}/members",
+    response_model=list[AdminOrganizationMemberItem],
+)
+async def get_admin_organization_members(
+    organization_id: str,
+    admin=Depends(get_current_admin),
+):
+    """Retrieve members of an organization for user assignment."""
+    return await admin_service.get_organization_members(organization_id=organization_id)
 
 
 # -------------------------------------------------------------

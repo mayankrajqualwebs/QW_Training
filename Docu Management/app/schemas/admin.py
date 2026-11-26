@@ -262,6 +262,8 @@ class AdminApiKeyItem(BaseModel):
 
     created_by_id: str
     created_by_email: str
+    assigned_user_id: str | None = None
+    assigned_user_email: str | None = None
 
 
 class AdminApiKeyListResponse(BaseModel):
@@ -269,6 +271,75 @@ class AdminApiKeyListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class AdminApiKeyCreateRequest(BaseModel):
+    """Payload received when provisioning an API key via Admin Console."""
+
+    name: str = Field(
+        min_length=2,
+        max_length=100,
+        description="Friendly name for the API key.",
+    )
+    project_id: str = Field(
+        ...,
+        description="ID of the project to which the API key belongs.",
+    )
+    user_id: str = Field(
+        ...,
+        description="ID of the user assigned as the key owner.",
+    )
+    scopes: list[str] = Field(
+        min_length=1,
+        max_length=5,
+        description="Allowed permission scopes.",
+    )
+    expires_at: datetime | None = Field(
+        default=None,
+        description="Optional future timestamp when the key automatically expires.",
+    )
+
+
+class AdminApiKeyCreatedResponse(BaseModel):
+    """Response returned ONLY ONCE immediately upon API key generation."""
+
+    id: str
+    name: str
+    key_prefix: str
+    key_suffix: str | None = None
+    api_key: str  # Plaintext raw secret, returned only upon creation
+    scopes: list[str]
+    status: str = "active"
+    expires_at: datetime | None = None
+    created_at: datetime
+
+    project_id: str
+    project_name: str
+
+    organization_id: str
+    organization_name: str
+
+    created_by_id: str
+    created_by_email: str
+    assigned_user_id: str
+    assigned_user_email: str
+
+
+class AdminApiKeyReassignRequest(BaseModel):
+    """Payload received when reassigning an API key to an eligible user."""
+
+    user_id: str = Field(
+        ...,
+        description="ID of the eligible user to reassign the API key to.",
+    )
+
+
+class AdminOrganizationMemberItem(BaseModel):
+    """Member option for user assignment in an organization."""
+
+    id: str
+    email: str
+    role: str
 
 
 class AdminMonitoringSummary(BaseModel):

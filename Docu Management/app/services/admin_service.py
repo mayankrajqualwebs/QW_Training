@@ -10,6 +10,7 @@ import asyncio
 import re
 import uuid
 from fastapi import HTTPException, UploadFile
+from datetime import datetime, timezone
 from app.repositories.admin_repository import admin_repository
 from app.repositories.project_repository import project_repository
 from app.repositories.organization_repository import organization_repository
@@ -920,6 +921,222 @@ class AdminService:
                 api_key_id=api_key_id,
                 revoked_at=datetime.now(timezone.utc),
             )
+
+    async def create_api_key(
+        self,
+        name: str,
+        project_id: str,
+        user_id: str,
+        scopes: list[str],
+        expires_at: datetime | None,
+        current_admin_id: str,
+    ) -> dict:
+        """Create a new API key from Admin Console with user assignment and scope configuration."""
+        from datetime import datetime, timezone
+        from app.core.security import generate_api_key, hash_api_key
+        from app.repositories.membership_repository import membership_repository
+
+        clean_name = name.strip()
+        if len(clean_name) < 2 or len(clean_name) > 100:
+            raise HTTPException(
+                status_code=400,
+                detail="API key name must be between 2 and 100 characters.",
+            )
+
+        project = await admin_repository.get_project_by_id(project_id)
+        if not project:
+            raise HTTPException(
+                status_code=404,
+                detail="Selected project not found.",
+            )
+
+        user = await admin_repository.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail="Assigned user not found.",
+            )
+
+        # Verify membership in the organization owning the project
+        membership = await membership_repository.get_by_user_and_org(
+            user_id=user_id,
+            organization_id=project.organizationId,
+        )
+        user_role = (
+            user.platformRole.value
+            if hasattr(user.platformRole, "value")
+            else str(user.platformRole)
+        )
+        if not membership and user_role != "ADMIN":
+            raise HTTPException(
+                status_code=400,
+                detail=f"User '{user.email}' is not a member of organization '{project.organization.name}'.",
+            )
+
+        # Validate scopes
+        if not scopes:
+            raise HTTPException(
+                status_code=400,
+                detail="At least one scope must be selected.",
+            )
+        if len(set(scopes)) != len(scopes):
+            raise HTTPException(
+                status_code=400,
+                detail="Duplicate scopes are not allowed.",
+            )
+
+        allowed_scopes = {"data:read", "data:write", "usage:read"}
+        invalid_scopes = set(scopes) - allowed_scopes
+        if invalid_scopes:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid scope(s): {', '.join(sorted(invalid_scopes))}. Supported scopes are: {', '.join(sorted(allowed_scopes))}.",
+            )
+
+        # Validate expiry
+        if expires_at is not None:
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if expires_at <= datetime.now(timezone.utc):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Expiration date must be in the future.",
+                )
+
+        raw_key = generate_api_key()
+        key_hash = hash_api_key(raw_key)
+        key_prefix = raw_key[:13]
+        key_suffix = raw_key[-3:]
+
+        key = await admin_repository.create_api_key(
+            name=clean_name,
+            key_prefix=key_prefix,
+            key_suffix=key_suffix,
+            key_hash=key_hash,
+            scopes=scopes,
+            project_id=project_id,
+            user_id=user_id,
+            expires_at=expires_at,
+        )
+
+        return {
+            "id": key.id,
+            "name": key.name,
+            "key_prefix": key.keyPrefix,
+            "key_suffix": getattr(key, "keySuffix", None) or key_suffix,
+            "api_key": raw_key,  # Raw secret returned ONLY ONCE!
+            "scopes": key.scopes,
+            "status": "active",
+            "expires_at": key.expiresAt,
+            "created_at": key.createdAt,
+            "project_id": key.projectId,
+            "project_name": key.project.name,
+            "organization_id": key.project.organizationId,
+            "organization_name": key.project.organization.name,
+            "created_by_id": key.createdById,
+            "created_by_email": key.createdBy.email,
+            "assigned_user_id": key.createdById,
+            "assigned_user_email": key.createdBy.email,
+        }
+
+    async def reassign_api_key(
+        self,
+        api_key_id: str,
+        new_user_id: str,
+    ) -> dict:
+        """Transfer ownership and authorization of an API key to another eligible user."""
+        from datetime import datetime, timezone
+        from app.repositories.membership_repository import membership_repository
+
+        key = await admin_repository.get_api_key_by_id(api_key_id)
+        if not key:
+            raise HTTPException(
+                status_code=404,
+                detail="API key not found.",
+            )
+
+        now = datetime.now(timezone.utc)
+        if key.revokedAt is not None:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot reassign a revoked API key.",
+            )
+
+        target_user = await admin_repository.get_user_by_id(new_user_id)
+        if not target_user:
+            raise HTTPException(
+                status_code=404,
+                detail="Target user not found.",
+            )
+
+        # Check membership in the organization owning the project
+        membership = await membership_repository.get_by_user_and_org(
+            user_id=new_user_id,
+            organization_id=key.project.organizationId,
+        )
+        target_role = (
+            target_user.platformRole.value
+            if hasattr(target_user.platformRole, "value")
+            else str(target_user.platformRole)
+        )
+        if not membership and target_role != "ADMIN":
+            raise HTTPException(
+                status_code=400,
+                detail=f"User '{target_user.email}' is not a member of organization '{key.project.organization.name}'.",
+            )
+
+        updated_key = await admin_repository.reassign_api_key_user(
+            api_key_id=api_key_id,
+            new_user_id=new_user_id,
+        )
+
+        if updated_key.revokedAt is not None:
+            key_status = "revoked"
+        elif updated_key.expiresAt is not None and updated_key.expiresAt <= now:
+            key_status = "expired"
+        else:
+            key_status = "active"
+
+        return {
+            "id": updated_key.id,
+            "name": updated_key.name,
+            "key_prefix": updated_key.keyPrefix,
+            "key_suffix": updated_key.keySuffix,
+            "scopes": updated_key.scopes,
+            "status": key_status,
+            "expires_at": updated_key.expiresAt,
+            "last_used_at": updated_key.lastUsedAt,
+            "revoked_at": updated_key.revokedAt,
+            "created_at": updated_key.createdAt,
+            "project_id": updated_key.projectId,
+            "project_name": updated_key.project.name,
+            "organization_id": updated_key.project.organizationId,
+            "organization_name": updated_key.project.organization.name,
+            "created_by_id": updated_key.createdById,
+            "created_by_email": updated_key.createdBy.email,
+            "assigned_user_id": updated_key.createdById,
+            "assigned_user_email": updated_key.createdBy.email,
+        }
+
+    async def get_organization_members(self, organization_id: str) -> list[dict]:
+        """Retrieve members belonging to an organization for key assignment."""
+        org = await admin_repository.get_organization_by_id(organization_id)
+        if not org:
+            raise HTTPException(
+                status_code=404,
+                detail="Organization not found.",
+            )
+
+        members = await admin_repository.get_organization_members(organization_id)
+        return [
+            {
+                "id": m.user.id,
+                "email": m.user.email,
+                "role": str(m.role.value if hasattr(m.role, "value") else m.role),
+            }
+            for m in members
+            if m.user
+        ]
 
     # -------------------------------------------------------------
     # Platform API Monitoring

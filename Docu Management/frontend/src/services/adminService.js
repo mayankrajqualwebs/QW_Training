@@ -141,8 +141,36 @@ export const adminService = {
         return response.data;
     },
 
+    async createApiKey({ name, project_id, user_id, scopes, expires_at }) {
+        const response = await api.post("/admin/api-keys", {
+            name,
+            project_id,
+            user_id,
+            scopes,
+            expires_at,
+        });
+
+        return response.data;
+    },
+
+    async reassignApiKey(apiKeyId, { user_id }) {
+        const response = await api.patch(
+            `/admin/api-keys/${apiKeyId}/reassign`,
+            { user_id }
+        );
+
+        return response.data;
+    },
+
     async revokeApiKey(apiKeyId) {
         await api.delete(`/admin/api-keys/${apiKeyId}`);
+    },
+
+    async getOrganizationMembers(organizationId) {
+        const response = await api.get(
+            `/admin/organizations/${organizationId}/members`
+        );
+        return response.data;
     },
 
     // ---------------------------------------------------------
