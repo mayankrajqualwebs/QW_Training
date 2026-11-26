@@ -3120,3 +3120,187 @@ td code {
     justify-content: space-between;
   }
 }
+
+/* ---------------------------------------------------------------
+   Admin API Keys
+--------------------------------------------------------------- */
+
+.admin-api-keys-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-api-keys-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-api-keys-search {
+  flex: 1;
+  min-width: 220px;
+  max-width: 380px;
+}
+
+.admin-api-keys-toolbar input,
+.admin-api-keys-toolbar select,
+.admin-api-keys-toolbar button {
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  background: var(--surface-color, #ffffff);
+  color: var(--text-color, #1e293b);
+}
+
+.admin-api-keys-toolbar button {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.admin-api-keys-toolbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-api-keys-notice,
+.admin-api-keys-error {
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.admin-api-keys-notice {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.admin-api-keys-error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.admin-api-keys-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  background: var(--surface-color, #ffffff);
+}
+
+.admin-api-keys-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.admin-api-keys-table th,
+.admin-api-keys-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  font-size: 13px;
+}
+
+.admin-api-keys-table th {
+  background: var(--surface-muted, #f8fafc);
+  color: var(--text-muted, #64748b);
+  font-weight: 600;
+}
+
+.admin-api-keys-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-api-key-prefix {
+  display: block;
+  margin-top: 5px;
+  color: var(--text-muted, #64748b);
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.admin-api-key-scopes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.admin-api-key-scopes span {
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+}
+
+.admin-api-key-status {
+  display: inline-block;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-api-key-status.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-api-key-status.revoked {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.admin-api-key-status.expired {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.admin-api-key-revoke {
+  padding: 7px 10px;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  background: #fff;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-api-key-revoke:hover {
+  background: #fef2f2;
+}
+
+.admin-api-key-disabled {
+  color: var(--text-muted, #94a3b8);
+}
+
+.admin-api-keys-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-muted, #64748b);
+  font-size: 13px;
+}
+
+.admin-api-keys-pagination>div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-api-keys-pagination button {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 7px;
+  background: var(--surface-color, #fff);
+  cursor: pointer;
+}
+
+.admin-api-keys-pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

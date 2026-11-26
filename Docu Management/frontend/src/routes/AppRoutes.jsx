@@ -25,6 +25,7 @@ import { AdminOverviewPage } from "../pages/AdminOverviewPage";
 import { AdminUsersPage } from "../pages/AdminUsersPage";
 import AdminProjectsPage from "../pages/AdminProjectsPage";
 import AdminDocumentsPage from "../pages/AdminDocumentsPage";
+import AdminApiKeysPage from "../pages/AdminApiKeysPage";
 
 function RoleRedirect() {
     const { user } = useAuth();
@@ -189,7 +190,7 @@ export function AppRoutes() {
                 />
                 <Route
                     path="api-keys"
-                    element={<PlaceholderPage title="API Key Management" />}
+                    element={<AdminApiKeysPage />}
                 />
                 <Route
                     path="monitoring"

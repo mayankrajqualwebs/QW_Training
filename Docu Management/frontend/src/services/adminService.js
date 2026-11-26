@@ -57,5 +57,17 @@ export const adminService = {
         return response.data;
     },
 
+    async getApiKeys(params = {}) {
+        const response = await api.get("/admin/api-keys", {
+            params,
+        });
+
+        return response.data;
+    },
+
+    async revokeApiKey(apiKeyId) {
+        await api.delete(`/admin/api-keys/${apiKeyId}`);
+    },
+
 
 };
