@@ -5336,3 +5336,16 @@ td code {
     justify-content: flex-end;
   }
 }
+
+/* User side css Update */
+
+/* .analytics-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.analytics-toolbar select {
+  min-width: 140px;
+} */
