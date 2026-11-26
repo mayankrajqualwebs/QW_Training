@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Plus, Users, FolderKanban } from "lucide-react";
+import { Users, FolderKanban } from "lucide-react";
+
 import { MainLayout } from "./MainLayout";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
@@ -8,13 +9,6 @@ import { SelectionBar } from "./SelectionBar";
 import { Alert } from "../components/Alert";
 import { useWorkspace } from "../hooks/useWorkspace";
 import { userNavigation } from "../routes/navigation";
-
-import { CreateOrganizationModal } from "../features/organizations";
-import { CreateProjectModal } from "../features/projects";
-import {
-    CreateKeyModal,
-    CreatedKeyModal,
-} from "../features/apiKeys";
 
 export function UserLayout({ children }) {
     const {
@@ -28,14 +22,6 @@ export function UserLayout({ children }) {
         setError,
         notice,
         setNotice,
-        showOrganizationForm,
-        setShowOrganizationForm,
-        showProjectForm,
-        setShowProjectForm,
-        showKeyForm,
-        setShowKeyForm,
-        showCreatedKey,
-        setShowCreatedKey,
         refreshWorkspace,
     } = useWorkspace();
 
@@ -107,14 +93,6 @@ export function UserLayout({ children }) {
                     </option>
                 ))}
             </select>
-
-            <button
-                className="side-create"
-                onClick={() => setShowOrganizationForm(true)}
-            >
-                <Plus size={16} />
-                New organization
-            </button>
         </Sidebar>
     );
 
@@ -157,26 +135,19 @@ export function UserLayout({ children }) {
                             from one workspace.
                         </p>
                     </div>
+                    {page === "Projects" && !organizations.length && (
+                        <section className="empty-workspace panel">
+                            <div className="empty-icon">
+                                <Users size={24} />
+                            </div>
 
-                    {(page === "Overview" || page === "Projects") && (
-                        <div className="header-actions">
-                            <button
-                                className="secondary-button"
-                                onClick={() => setShowOrganizationForm(true)}
-                            >
-                                <Plus size={16} />
-                                Organization
-                            </button>
+                            <h2>No organization assigned</h2>
 
-                            <button
-                                className="primary-button"
-                                disabled={!organizationId}
-                                onClick={() => setShowProjectForm(true)}
-                            >
-                                <Plus size={17} />
-                                New Project
-                            </button>
-                        </div>
+                            <p>
+                                You haven't been added to an organization yet.
+                                Contact your administrator to get access.
+                            </p>
+                        </section>
                     )}
                 </section>
 
@@ -213,21 +184,12 @@ export function UserLayout({ children }) {
                                 <FolderKanban size={24} />
                             </div>
 
-                            <h2>Create your first project</h2>
+                            <h2>No projects assigned</h2>
 
                             <p>
-                                Projects organize your applications, documents,
-                                API keys, and request logs.
+                                No projects are currently available in this organization.
+                                Contact your administrator if you need project access.
                             </p>
-
-                            <button
-                                className="primary-button"
-                                disabled={!organizationId}
-                                onClick={() => setShowProjectForm(true)}
-                            >
-                                <Plus size={16} />
-                                Create Project
-                            </button>
                         </section>
                     )}
 
@@ -239,31 +201,6 @@ export function UserLayout({ children }) {
                     </div>
                 )}
             </MainLayout>
-
-            {showOrganizationForm && (
-                <CreateOrganizationModal
-                    onClose={() => setShowOrganizationForm(false)}
-                />
-            )}
-
-            {showProjectForm && (
-                <CreateProjectModal
-                    onClose={() => setShowProjectForm(false)}
-                />
-            )}
-
-            {showKeyForm && (
-                <CreateKeyModal
-                    onClose={() => setShowKeyForm(false)}
-                />
-            )}
-
-            {showCreatedKey && (
-                <CreatedKeyModal
-                    createdKey={showCreatedKey}
-                    onClose={() => setShowCreatedKey(null)}
-                />
-            )}
         </>
     );
 }
