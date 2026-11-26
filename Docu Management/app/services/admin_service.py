@@ -399,6 +399,160 @@ class AdminService:
     async def get_all_organizations(self):
         return await organization_repository.list_all_organizations()
 
+    async def create_organization(
+        self,
+        name: str,
+        slug: str,
+        current_admin_id: str,
+    ) -> dict:
+        """Create a new organization workspace from Admin Console."""
+        name = name.strip()
+        slug = slug.lower().strip()
+
+        if len(name) < 2 or len(name) > 100:
+            raise HTTPException(
+                status_code=400,
+                detail="Organization name must be between 2 and 100 characters.",
+            )
+
+        existing = await admin_repository.get_organization_by_slug(slug)
+        if existing is not None:
+            raise HTTPException(
+                status_code=409,
+                detail=f"An organization with the slug '{slug}' already exists.",
+            )
+
+        org = await admin_repository.create_organization(
+            name=name,
+            slug=slug,
+            creator_id=current_admin_id,
+        )
+
+        return {
+            "id": org.id,
+            "name": org.name,
+            "slug": org.slug,
+        }
+
+    async def delete_organization(
+        self,
+        organization_id: str,
+    ) -> None:
+        """Delete an organization with relationship integrity checks."""
+        org = await admin_repository.get_organization_by_id(organization_id)
+        if org is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Organization not found.",
+            )
+
+        project_count = await admin_repository.count_organization_projects(organization_id)
+        if project_count > 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot delete organization '{org.name}' because it contains {project_count} associated project(s). Please delete all projects within this organization first.",
+            )
+
+        try:
+            await admin_repository.delete_organization(organization_id)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=400,
+                detail="Unable to delete organization due to associated records.",
+            ) from exc
+
+    async def create_project(
+        self,
+        organization_id: str,
+        name: str,
+        slug: str,
+    ) -> dict:
+        """Create a new project scoped to an organization from Admin Console."""
+        name = name.strip()
+        slug = slug.lower().strip()
+
+        if len(name) < 2 or len(name) > 100:
+            raise HTTPException(
+                status_code=400,
+                detail="Project name must be between 2 and 100 characters.",
+            )
+
+        org = await admin_repository.get_organization_by_id(organization_id)
+        if org is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Selected organization not found.",
+            )
+
+        existing = await admin_repository.get_project_by_org_and_slug(
+            organization_id=organization_id,
+            slug=slug,
+        )
+        if existing is not None:
+            raise HTTPException(
+                status_code=409,
+                detail=f"A project with the slug '{slug}' already exists in organization '{org.name}'.",
+            )
+
+        project = await admin_repository.create_project(
+            organization_id=organization_id,
+            name=name,
+            slug=slug,
+        )
+
+        return {
+            "id": project.id,
+            "name": project.name,
+            "slug": project.slug,
+            "organization_id": project.organizationId,
+            "organization": {
+                "id": project.organization.id,
+                "name": project.organization.name,
+            },
+            "created_at": project.createdAt,
+        }
+
+    async def delete_project(
+        self,
+        project_id: str,
+    ) -> None:
+        """Delete a project with relationship integrity checks."""
+        project = await admin_repository.get_project_by_id(project_id)
+        if project is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Project not found.",
+            )
+
+        doc_count = await admin_repository.count_project_documents(project_id)
+        if doc_count > 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot delete project '{project.name}' because it contains {doc_count} associated document(s). Please remove all documents first.",
+            )
+
+        key_count = await admin_repository.count_project_api_keys(project_id)
+        if key_count > 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot delete project '{project.name}' because it contains {key_count} active API key(s). Please revoke or delete all API keys first.",
+            )
+
+        log_count = await admin_repository.count_project_request_logs(project_id)
+        if log_count > 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot delete project '{project.name}' because it has {log_count} recorded API request log(s).",
+            )
+
+        try:
+            await admin_repository.delete_project(project_id)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=400,
+                detail="Unable to delete project due to associated records.",
+            ) from exc
+
 
     async def get_documents(
         self,

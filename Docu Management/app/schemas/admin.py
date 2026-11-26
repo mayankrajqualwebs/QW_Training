@@ -130,6 +130,43 @@ class AdminProjectListResponse(BaseModel):
 class AdminOrganizationOption(BaseModel):
     id: str
     name: str
+    slug: str | None = None
+
+
+class AdminOrganizationCreateRequest(BaseModel):
+    """Payload received when creating a new organization via Admin Console."""
+
+    name: str = Field(
+        min_length=2,
+        max_length=100,
+        description="Display name of the organization (e.g. Acme Corp).",
+    )
+    slug: str = Field(
+        min_length=2,
+        max_length=50,
+        pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$",
+        description="URL-friendly unique identifier (e.g. acme-corp).",
+    )
+
+
+class AdminProjectCreateRequest(BaseModel):
+    """Payload received when creating a new project via Admin Console."""
+
+    organization_id: str = Field(
+        ...,
+        description="ID of the organization to which the project belongs.",
+    )
+    name: str = Field(
+        min_length=2,
+        max_length=100,
+        description="Display name of the project (e.g. Mobile API).",
+    )
+    slug: str = Field(
+        min_length=2,
+        max_length=50,
+        pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$",
+        description="URL-friendly identifier, unique per organization (e.g. mobile-api).",
+    )
 
 
 class AdminDocumentItem(BaseModel):

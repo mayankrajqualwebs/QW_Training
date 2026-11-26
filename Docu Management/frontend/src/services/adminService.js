@@ -61,9 +61,36 @@ export const adminService = {
         return response.data;
     },
 
+    async createProject({ organization_id, name, slug }) {
+        const response = await api.post("/admin/projects", {
+            organization_id,
+            name,
+            slug,
+        });
+
+        return response.data;
+    },
+
+    async deleteProject(projectId) {
+        await api.delete(`/admin/projects/${projectId}`);
+    },
+
     async getOrganizations() {
         const response = await api.get("/admin/organizations");
         return response.data;
+    },
+
+    async createOrganization({ name, slug }) {
+        const response = await api.post("/admin/organizations", {
+            name,
+            slug,
+        });
+
+        return response.data;
+    },
+
+    async deleteOrganization(organizationId) {
+        await api.delete(`/admin/organizations/${organizationId}`);
     },
 
     async getDocuments(params = {}) {

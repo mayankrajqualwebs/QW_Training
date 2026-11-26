@@ -17,8 +17,11 @@ from app.schemas.admin import (
     AdminUserCreateRequest,
     AdminUserRoleUpdate,
     AdminUserRoleResponse,
+    AdminProjectItem,
     AdminProjectListResponse,
+    AdminProjectCreateRequest,
     AdminOrganizationOption,
+    AdminOrganizationCreateRequest,
     AdminDocumentItem,
     AdminDocumentListResponse,
     AdminApiKeyItem,
@@ -184,6 +187,36 @@ async def get_admin_projects(
         "page_size": result["page_size"],
     }
 
+
+@router.post(
+    "/projects",
+    response_model=AdminProjectItem,
+    status_code=201,
+)
+async def create_admin_project(
+    payload: AdminProjectCreateRequest,
+    admin=Depends(get_current_admin),
+):
+    """Create a new project scoped to an organization."""
+    return await admin_service.create_project(
+        organization_id=payload.organization_id,
+        name=payload.name,
+        slug=payload.slug,
+    )
+
+
+@router.delete(
+    "/projects/{project_id}",
+    status_code=204,
+)
+async def delete_admin_project(
+    project_id: str,
+    admin=Depends(get_current_admin),
+):
+    """Delete a project."""
+    await admin_service.delete_project(project_id=project_id)
+    return None
+
 # -------------------------------------------------------------
 # Platform Organizations
 # -------------------------------------------------------------
@@ -203,9 +236,40 @@ async def get_admin_organizations(
         {
             "id": organization.id,
             "name": organization.name,
+            "slug": organization.slug,
         }
         for organization in organizations
     ]
+
+
+@router.post(
+    "/organizations",
+    response_model=AdminOrganizationOption,
+    status_code=201,
+)
+async def create_admin_organization(
+    payload: AdminOrganizationCreateRequest,
+    admin=Depends(get_current_admin),
+):
+    """Create a new organization workspace."""
+    return await admin_service.create_organization(
+        name=payload.name,
+        slug=payload.slug,
+        current_admin_id=admin.id,
+    )
+
+
+@router.delete(
+    "/organizations/{organization_id}",
+    status_code=204,
+)
+async def delete_admin_organization(
+    organization_id: str,
+    admin=Depends(get_current_admin),
+):
+    """Delete an organization workspace."""
+    await admin_service.delete_organization(organization_id=organization_id)
+    return None
 
 
 # -------------------------------------------------------------

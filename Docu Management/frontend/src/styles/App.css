@@ -3060,9 +3060,176 @@ td code {
   gap: 16px;
 }
 
+.admin-projects-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid #0d9488;
+  border-radius: 9px;
+  background: #0d9488;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.admin-btn-primary:hover:not(:disabled) {
+  background: #0f766e;
+  border-color: #0f766e;
+}
+
+.admin-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid #99f6e4;
+  border-radius: 9px;
+  background: #f0fdfa;
+  color: #0d9488;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.admin-btn-secondary:hover:not(:disabled) {
+  background: #ccfbf1;
+  border-color: #5eead4;
+}
+
+.admin-btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-projects-org-filter-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-btn-delete-org {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid #fee2e2;
+  border-radius: 9px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.admin-btn-delete-org:hover:not(:disabled) {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+.admin-btn-delete-org:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.admin-btn-delete-org-picker {
+  background: #ffffff;
+  color: #dc2626;
+  border: 1px dashed #fca5a5;
+}
+
+.admin-btn-delete-org-picker:hover:not(:disabled) {
+  background: #fef2f2;
+  border-style: solid;
+}
+
+.admin-project-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fee2e2;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-project-delete-btn:hover:not(:disabled) {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+.admin-project-delete-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.admin-delete-target-badge {
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-delete-target-badge strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #172d35;
+}
+
+.admin-delete-target-badge span {
+  font-size: 12px;
+  color: #71858a;
+  font-family: monospace;
+}
+
 @media (max-width: 768px) {
+  .admin-projects-header-actions {
+    width: 100%;
+  }
+
+  .admin-projects-org-filter-wrapper {
+    width: 100%;
+  }
+
   .admin-projects-organization-filter {
     width: 100%;
+    flex: 1;
   }
 }
 

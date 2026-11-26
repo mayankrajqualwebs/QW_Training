@@ -186,6 +186,98 @@ class AdminRepository:
         )
 
     # -------------------------------------------------------------
+    # Organization Management
+    # -------------------------------------------------------------
+
+    async def get_organization_by_id(self, org_id: str):
+        return await prisma.organization.find_unique(
+            where={"id": org_id},
+        )
+
+    async def get_organization_by_slug(self, slug: str):
+        return await prisma.organization.find_unique(
+            where={"slug": slug.lower().strip()},
+        )
+
+    async def count_organization_projects(self, org_id: str) -> int:
+        return await prisma.project.count(
+            where={"organizationId": org_id},
+        )
+
+    async def create_organization(self, name: str, slug: str, creator_id: str):
+        async with prisma.tx() as transaction:
+            organization = await transaction.organization.create(
+                data={
+                    "name": name,
+                    "slug": slug.lower().strip(),
+                    "createdById": creator_id,
+                }
+            )
+            await transaction.membership.create(
+                data={
+                    "userId": creator_id,
+                    "organizationId": organization.id,
+                    "role": "OWNER",
+                }
+            )
+        return organization
+
+    async def delete_organization(self, org_id: str):
+        return await prisma.organization.delete(
+            where={"id": org_id},
+        )
+
+    # -------------------------------------------------------------
+    # Project Management
+    # -------------------------------------------------------------
+
+    async def get_project_by_id(self, project_id: str):
+        return await prisma.project.find_unique(
+            where={"id": project_id},
+            include={"organization": True},
+        )
+
+    async def get_project_by_org_and_slug(self, organization_id: str, slug: str):
+        return await prisma.project.find_unique(
+            where={
+                "organizationId_slug": {
+                    "organizationId": organization_id,
+                    "slug": slug.lower().strip(),
+                }
+            }
+        )
+
+    async def count_project_documents(self, project_id: str) -> int:
+        return await prisma.projectfile.count(
+            where={"projectId": project_id},
+        )
+
+    async def count_project_api_keys(self, project_id: str) -> int:
+        return await prisma.apikey.count(
+            where={"projectId": project_id},
+        )
+
+    async def count_project_request_logs(self, project_id: str) -> int:
+        return await prisma.requestlog.count(
+            where={"projectId": project_id},
+        )
+
+    async def create_project(self, organization_id: str, name: str, slug: str):
+        return await prisma.project.create(
+            data={
+                "name": name.strip(),
+                "slug": slug.lower().strip(),
+                "organizationId": organization_id,
+            },
+            include={"organization": True},
+        )
+
+    async def delete_project(self, project_id: str):
+        return await prisma.project.delete(
+            where={"id": project_id},
+        )
+
+    # -------------------------------------------------------------
     # Platform API Key Management
     # -------------------------------------------------------------
 
