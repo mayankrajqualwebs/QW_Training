@@ -185,6 +185,7 @@ class AdminDocumentItem(BaseModel):
     organization_name: str
 
     uploaded_by_id: str
+    uploaded_by_email: str | None = None
     created_at: datetime
 
 
@@ -193,6 +194,52 @@ class AdminDocumentListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class AdminDocumentVersionItem(BaseModel):
+    id: str
+    version_number: int
+    size: int
+    content_type: str
+    created_at: datetime
+    uploaded_by_id: str
+    uploaded_by_email: str | None = None
+
+
+class AdminDocumentDetailResponse(BaseModel):
+    id: str
+    name: str
+    original_name: str
+    content_type: str
+    size: int
+    status: str
+    current_version: int
+
+    project_id: str
+    project_name: str
+
+    organization_id: str
+    organization_name: str
+
+    uploaded_by_id: str
+    uploaded_by_email: str | None = None
+    created_at: datetime
+    updated_at: datetime
+    versions: list[AdminDocumentVersionItem] = []
+
+
+class AdminDocumentUpdateRequest(BaseModel):
+    name: str = Field(
+        min_length=1,
+        max_length=255,
+        description="Updated display name of the document.",
+    )
+
+
+class AdminDocumentDownloadResponse(BaseModel):
+    download_url: str
+    filename: str
+    expires_in: int = 300
 
 class AdminApiKeyItem(BaseModel):
     id: str

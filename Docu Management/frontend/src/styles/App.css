@@ -3491,6 +3491,278 @@ td code {
   }
 }
 
+/* Document Header Actions */
+.admin-documents-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Document Table Actions */
+.admin-doc-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.admin-doc-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.admin-doc-view-btn {
+  background: #f0fdfa;
+  color: #0d9488;
+  border-color: #99f6e4;
+}
+
+.admin-doc-view-btn:hover:not(:disabled) {
+  background: #ccfbf1;
+  border-color: #5eead4;
+}
+
+.admin-doc-download-btn {
+  background: #f8fafc;
+  color: #0284c7;
+  border-color: #bae6fd;
+}
+
+.admin-doc-download-btn:hover:not(:disabled) {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+}
+
+.admin-doc-download-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.admin-doc-edit-btn {
+  background: #f8fafc;
+  color: #475569;
+  border-color: #e2e8f0;
+}
+
+.admin-doc-edit-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
+.admin-doc-delete-btn {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fee2e2;
+}
+
+.admin-doc-delete-btn:hover:not(:disabled) {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+.admin-doc-delete-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* File Upload input & badge */
+.admin-file-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-file-input-wrapper input[type="file"] {
+  height: auto;
+  padding: 8px 12px;
+  border: 1px dashed #99f6e4;
+  border-radius: 8px;
+  background: #f0fdfa;
+  color: #172d35;
+  cursor: pointer;
+}
+
+.admin-file-input-wrapper input[type="file"]:hover {
+  background: #ccfbf1;
+}
+
+.admin-selected-file-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  color: #0d9488;
+}
+
+.admin-selected-file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-selected-file-info .file-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #172d35;
+}
+
+.admin-selected-file-info .file-meta {
+  font-size: 11px;
+  color: #71858a;
+}
+
+/* Upload Progress Bar */
+.admin-upload-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.admin-upload-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.admin-upload-progress-fill {
+  height: 100%;
+  background: #0d9488;
+  transition: width 0.2s ease;
+}
+
+.admin-upload-progress-text {
+  font-size: 12px;
+  color: #0d9488;
+  font-weight: 500;
+}
+
+/* Document Details Modal */
+.admin-doc-details-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.admin-doc-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.admin-doc-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-doc-detail-item .detail-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.admin-doc-detail-item .detail-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: #172d35;
+  word-break: break-all;
+}
+
+.admin-doc-detail-item .detail-value.highlight {
+  font-weight: 700;
+  color: #0d9488;
+}
+
+.admin-doc-versions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-doc-versions-section h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #172d35;
+}
+
+.admin-doc-versions-empty {
+  margin: 0;
+  font-size: 12px;
+  color: #71858a;
+  font-style: italic;
+}
+
+.admin-doc-versions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.admin-doc-versions-table th {
+  background: #f1f5f9;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-doc-versions-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+}
+
+.admin-doc-versions-table .current-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .admin-doc-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------------------------------------------------------------
    Admin API Keys
 --------------------------------------------------------------- */

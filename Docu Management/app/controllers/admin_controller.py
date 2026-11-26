@@ -4,7 +4,7 @@ Admin Controller
 Handles HTTP endpoints for platform administration.
 """
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, File, UploadFile, Form
 from datetime import datetime, timezone
 
 from app.core.dependencies import get_current_admin
@@ -24,6 +24,9 @@ from app.schemas.admin import (
     AdminOrganizationCreateRequest,
     AdminDocumentItem,
     AdminDocumentListResponse,
+    AdminDocumentDetailResponse,
+    AdminDocumentUpdateRequest,
+    AdminDocumentDownloadResponse,
     AdminApiKeyItem,
     AdminApiKeyListResponse,
     AdminMonitoringSummary,
@@ -305,13 +308,14 @@ async def get_admin_documents(
             "original_name": file.originalName,
             "content_type": file.contentType,
             "size": file.size,
-            "status": str(file.status),
+            "status": str(file.status.value if hasattr(file.status, "value") else file.status),
             "current_version": file.currentVersion,
             "project_id": file.projectId,
             "project_name": file.project.name,
             "organization_id": file.project.organizationId,
             "organization_name": file.project.organization.name,
             "uploaded_by_id": file.uploadedById,
+            "uploaded_by_email": getattr(getattr(file, "uploadedBy", None), "email", None),
             "created_at": file.createdAt,
         })
 
@@ -321,6 +325,79 @@ async def get_admin_documents(
         "page": result["page"],
         "page_size": result["page_size"],
     }
+
+
+@router.post(
+    "/documents/upload",
+    response_model=AdminDocumentDetailResponse,
+    status_code=201,
+)
+async def upload_admin_document(
+    file: UploadFile = File(...),
+    project_id: str = Form(...),
+    name: str | None = Form(default=None),
+    admin=Depends(get_current_admin),
+):
+    """Direct document upload to a project from Admin Console."""
+    return await admin_service.upload_document(
+        file=file,
+        project_id=project_id,
+        name=name,
+        current_admin_id=admin.id,
+    )
+
+
+@router.get(
+    "/documents/{document_id}",
+    response_model=AdminDocumentDetailResponse,
+)
+async def get_admin_document_details(
+    document_id: str,
+    admin=Depends(get_current_admin),
+):
+    """Retrieve full metadata, uploader, and version history for a document."""
+    return await admin_service.get_document_details(document_id=document_id)
+
+
+@router.patch(
+    "/documents/{document_id}",
+    response_model=AdminDocumentDetailResponse,
+)
+async def update_admin_document(
+    document_id: str,
+    payload: AdminDocumentUpdateRequest,
+    admin=Depends(get_current_admin),
+):
+    """Update document metadata (display name)."""
+    return await admin_service.update_document_metadata(
+        document_id=document_id,
+        name=payload.name,
+    )
+
+
+@router.get(
+    "/documents/{document_id}/download",
+    response_model=AdminDocumentDownloadResponse,
+)
+async def download_admin_document(
+    document_id: str,
+    admin=Depends(get_current_admin),
+):
+    """Generate temporary presigned S3 download URL for a document."""
+    return await admin_service.get_document_download(document_id=document_id)
+
+
+@router.delete(
+    "/documents/{document_id}",
+    status_code=204,
+)
+async def delete_admin_document(
+    document_id: str,
+    admin=Depends(get_current_admin),
+):
+    """Permanently delete a document and its storage objects."""
+    await admin_service.delete_document(document_id=document_id)
+    return None
 
 # -------------------------------------------------------------
 # Platform API Key Management

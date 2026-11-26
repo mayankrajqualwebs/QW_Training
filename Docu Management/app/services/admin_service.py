@@ -7,11 +7,14 @@ and recent activity for the Admin Console.
 """
 
 import asyncio
-from fastapi import HTTPException
+import re
+import uuid
+from fastapi import HTTPException, UploadFile
 from app.repositories.admin_repository import admin_repository
 from app.repositories.project_repository import project_repository
 from app.repositories.organization_repository import organization_repository
 from app.repositories.file_repository import file_repository
+from app.services.storage_service import storage_service
 
 class AdminService:
     """Service for Admin Console dashboard operations."""
@@ -584,6 +587,276 @@ class AdminService:
             "page": page,
             "page_size": page_size,
         }
+
+    async def get_document_details(self, document_id: str) -> dict:
+        """Retrieve full details of a document including uploader and versions."""
+        file = await admin_repository.get_document_by_id(document_id)
+        if not file:
+            raise HTTPException(
+                status_code=404,
+                detail="Document not found.",
+            )
+
+        versions = []
+        for v in getattr(file, "versions", []):
+            versions.append({
+                "id": v.id,
+                "version_number": v.versionNumber,
+                "size": int(v.size),
+                "content_type": v.contentType,
+                "created_at": v.createdAt,
+                "uploaded_by_id": v.uploadedById,
+                "uploaded_by_email": getattr(getattr(v, "uploadedBy", None), "email", None),
+            })
+
+        status_val = (
+            file.status.value
+            if hasattr(file.status, "value")
+            else str(file.status)
+        )
+
+        return {
+            "id": file.id,
+            "name": file.name,
+            "original_name": file.originalName,
+            "content_type": file.contentType,
+            "size": int(file.size),
+            "status": status_val,
+            "current_version": file.currentVersion,
+            "project_id": file.projectId,
+            "project_name": file.project.name,
+            "organization_id": file.project.organizationId,
+            "organization_name": file.project.organization.name,
+            "uploaded_by_id": file.uploadedById,
+            "uploaded_by_email": getattr(getattr(file, "uploadedBy", None), "email", None),
+            "created_at": file.createdAt,
+            "updated_at": file.updatedAt,
+            "versions": versions,
+        }
+
+    async def upload_document(
+        self,
+        file: UploadFile,
+        project_id: str,
+        name: str | None,
+        current_admin_id: str,
+    ) -> dict:
+        """Direct multipart document upload by an administrator."""
+        project = await admin_repository.get_project_by_id(project_id)
+        if not project:
+            raise HTTPException(
+                status_code=404,
+                detail="Selected project not found.",
+            )
+
+        filename = (name.strip() if name and name.strip() else file.filename or "").strip()
+        if not filename:
+            raise HTTPException(
+                status_code=400,
+                detail="Document must have a valid filename.",
+            )
+
+        raw_content_type = (file.content_type or "").strip().lower()
+        allowed_types = {
+            "application/pdf": [".pdf"],
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+        }
+        ext = ("." + filename.rsplit(".", 1)[-1].lower()) if "." in filename else ""
+
+        if raw_content_type in ("application/octet-stream", "", None):
+            if ext == ".pdf":
+                content_type = "application/pdf"
+            elif ext == ".docx":
+                content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            else:
+                content_type = raw_content_type
+        else:
+            content_type = raw_content_type
+
+        if content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400,
+                detail="Only PDF and DOCX files are allowed.",
+            )
+
+        if ext not in allowed_types.get(content_type, []):
+            raise HTTPException(
+                status_code=400,
+                detail=f"File extension '{ext}' does not match the content type.",
+            )
+
+        content = await file.read()
+        size = len(content)
+
+        if size <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded file cannot be empty.",
+            )
+
+        max_size = 10 * 1024 * 1024  # 10 MB
+        if size > max_size:
+            raise HTTPException(
+                status_code=400,
+                detail="File size exceeds the maximum allowed limit of 10 MB.",
+            )
+
+        # Validate magic bytes
+        if content_type == "application/pdf" and not content.startswith(b"%PDF-"):
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded file is not a valid PDF document.",
+            )
+        if (
+            content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            and not content.startswith(b"PK")
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded file is not a valid DOCX document.",
+            )
+
+        safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", filename).strip("._")
+        safe_name = re.sub(r"_+", "_", safe_name)
+        object_key = (
+            f"organizations/{project.organizationId}/"
+            f"projects/{project_id}/"
+            f"files/{uuid.uuid4().hex}_{safe_name}"
+        )
+
+        try:
+            await storage_service.upload_file_content(
+                object_key=object_key,
+                content=content,
+                content_type=content_type,
+            )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Storage upload failed: {str(exc)}",
+            ) from exc
+
+        try:
+            file_record = await admin_repository.create_document_with_initial_version(
+                name=filename,
+                original_name=file.filename or filename,
+                object_key=object_key,
+                content_type=content_type,
+                size=size,
+                project_id=project_id,
+                uploaded_by_id=current_admin_id,
+            )
+        except Exception as exc:
+            try:
+                await storage_service.delete_file(object_key)
+            except Exception:
+                pass
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to save document record.",
+            ) from exc
+
+        return await self.get_document_details(file_record.id)
+
+    async def update_document_metadata(self, document_id: str, name: str) -> dict:
+        """Update a document's display name."""
+        file = await admin_repository.get_document_by_id(document_id)
+        if not file:
+            raise HTTPException(
+                status_code=404,
+                detail="Document not found.",
+            )
+
+        new_name = name.strip()
+        if not new_name:
+            raise HTTPException(
+                status_code=400,
+                detail="Document name cannot be empty.",
+            )
+
+        old_ext = ("." + file.originalName.rsplit(".", 1)[-1].lower()) if "." in file.originalName else ""
+        new_ext = ("." + new_name.rsplit(".", 1)[-1].lower()) if "." in new_name else ""
+        if old_ext != new_ext:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Renaming cannot change the file extension (expected '{old_ext}').",
+            )
+
+        await admin_repository.update_document_name(document_id=document_id, new_name=new_name)
+        return await self.get_document_details(document_id)
+
+    async def get_document_download(self, document_id: str) -> dict:
+        """Generate a presigned download URL for a document."""
+        file = await admin_repository.get_document_by_id(document_id)
+        if not file:
+            raise HTTPException(
+                status_code=404,
+                detail="Document not found.",
+            )
+
+        status_val = (
+            file.status.value
+            if hasattr(file.status, "value")
+            else str(file.status)
+        )
+        if status_val != "UPLOADED":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Document is not available for download (status: {status_val}).",
+            )
+
+        exists = await storage_service.check_file_exists(file.objectKey)
+        if not exists:
+            raise HTTPException(
+                status_code=404,
+                detail="The file content could not be found in storage.",
+            )
+
+        download_url = await storage_service.generate_download_url(
+            object_key=file.objectKey,
+            expires_in=300,
+        )
+
+        return {
+            "download_url": download_url,
+            "filename": file.originalName,
+            "expires_in": 300,
+        }
+
+    async def delete_document(self, document_id: str) -> None:
+        """Permanently delete a document from storage and database."""
+        file = await admin_repository.get_document_by_id(document_id)
+        if not file:
+            raise HTTPException(
+                status_code=404,
+                detail="Document not found.",
+            )
+
+        status_val = (
+            file.status.value
+            if hasattr(file.status, "value")
+            else str(file.status)
+        )
+        if status_val == "DELETING":
+            raise HTTPException(
+                status_code=409,
+                detail="Document deletion is already in progress.",
+            )
+
+        await admin_repository.mark_document_deleting(document_id)
+
+        keys = {file.objectKey}
+        for v in getattr(file, "versions", []):
+            if getattr(v, "objectKey", None):
+                keys.add(v.objectKey)
+
+        for key in keys:
+            try:
+                await storage_service.delete_file(key)
+            except Exception:
+                pass
+
+        await admin_repository.delete_document(document_id)
 
     # -------------------------------------------------------------
     # Platform API Key Management

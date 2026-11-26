@@ -278,6 +278,110 @@ class AdminRepository:
         )
 
     # -------------------------------------------------------------
+    # Platform Document Management
+    # -------------------------------------------------------------
+
+    async def get_document_by_id(self, document_id: str):
+        """Retrieve document with project, organization, uploader, and version history."""
+        return await prisma.projectfile.find_unique(
+            where={"id": document_id},
+            include={
+                "project": {
+                    "include": {
+                        "organization": True,
+                    },
+                },
+                "uploadedBy": True,
+                "versions": {
+                    "include": {
+                        "uploadedBy": True,
+                    },
+                    "order_by": {
+                        "versionNumber": "desc",
+                    },
+                },
+            },
+        )
+
+    async def create_document_with_initial_version(
+        self,
+        name: str,
+        original_name: str,
+        object_key: str,
+        content_type: str,
+        size: int,
+        project_id: str,
+        uploaded_by_id: str,
+    ):
+        """Atomically create a document and its version 1 record in database."""
+        async with prisma.tx() as transaction:
+            file_record = await transaction.projectfile.create(
+                data={
+                    "name": name,
+                    "originalName": original_name,
+                    "objectKey": object_key,
+                    "contentType": content_type,
+                    "size": size,
+                    "status": "UPLOADED",
+                    "projectId": project_id,
+                    "uploadedById": uploaded_by_id,
+                    "currentVersion": 1,
+                },
+                include={
+                    "project": {
+                        "include": {
+                            "organization": True,
+                        },
+                    },
+                    "uploadedBy": True,
+                },
+            )
+            await transaction.fileversion.create(
+                data={
+                    "fileId": file_record.id,
+                    "versionNumber": 1,
+                    "objectKey": object_key,
+                    "contentType": content_type,
+                    "size": size,
+                    "uploadedById": uploaded_by_id,
+                }
+            )
+        return file_record
+
+    async def update_document_name(self, document_id: str, new_name: str):
+        return await prisma.projectfile.update(
+            where={"id": document_id},
+            data={"name": new_name},
+            include={
+                "project": {
+                    "include": {
+                        "organization": True,
+                    },
+                },
+                "uploadedBy": True,
+                "versions": {
+                    "include": {
+                        "uploadedBy": True,
+                    },
+                    "order_by": {
+                        "versionNumber": "desc",
+                    },
+                },
+            },
+        )
+
+    async def mark_document_deleting(self, document_id: str):
+        return await prisma.projectfile.update(
+            where={"id": document_id},
+            data={"status": "DELETING"},
+        )
+
+    async def delete_document(self, document_id: str):
+        return await prisma.projectfile.delete(
+            where={"id": document_id},
+        )
+
+    # -------------------------------------------------------------
     # Platform API Key Management
     # -------------------------------------------------------------
 

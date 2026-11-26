@@ -425,7 +425,8 @@ class FileRepository:
                     "include": {
                         "organization": True,
                     }
-                }
+                },
+                "uploadedBy": True,
             },
             skip=skip,
             take=take,

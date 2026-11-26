@@ -101,6 +101,38 @@ export const adminService = {
         return response.data;
     },
 
+    async uploadDocument(formData, onProgress) {
+        const response = await api.post("/admin/documents/upload", formData, {
+            onUploadProgress: onProgress,
+        });
+
+        return response.data;
+    },
+
+    async getDocument(documentId) {
+        const response = await api.get(`/admin/documents/${documentId}`);
+        return response.data;
+    },
+
+    async updateDocument(documentId, data) {
+        const response = await api.patch(
+            `/admin/documents/${documentId}`,
+            data
+        );
+        return response.data;
+    },
+
+    async getDocumentDownloadUrl(documentId) {
+        const response = await api.get(
+            `/admin/documents/${documentId}/download`
+        );
+        return response.data;
+    },
+
+    async deleteDocument(documentId) {
+        await api.delete(`/admin/documents/${documentId}`);
+    },
+
     async getApiKeys(params = {}) {
         const response = await api.get("/admin/api-keys", {
             params,
