@@ -246,6 +246,121 @@ class AdminService:
             "platform_role": updated_role,
         }
 
+    async def create_user(
+        self,
+        email: str,
+        password: str,
+        platform_role: str = "USER",
+    ) -> dict:
+        """Create a new platform user with administrative role assignment."""
+        from app.core.security import hash_password
+
+        email = str(email).lower().strip()
+        platform_role = str(platform_role).upper().strip()
+
+        if platform_role not in {"USER", "ADMIN"}:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid platform role. Must be 'USER' or 'ADMIN'.",
+            )
+
+        existing = await admin_repository.get_user_by_email(email)
+        if existing is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="An account with this email already exists",
+            )
+
+        user = await admin_repository.create_user(
+            email=email,
+            password_hash=hash_password(password),
+            platform_role=platform_role,
+        )
+
+        role = (
+            user.platformRole.value
+            if hasattr(user.platformRole, "value")
+            else user.platformRole
+        )
+
+        return {
+            "id": user.id,
+            "email": user.email,
+            "platform_role": role,
+            "created_at": user.createdAt,
+        }
+
+    async def delete_user(
+        self,
+        user_id: str,
+        current_admin_id: str,
+    ) -> None:
+        """Delete a platform user with administrative safeguards and relationship integrity checks."""
+        if user_id == current_admin_id:
+            raise HTTPException(
+                status_code=400,
+                detail="You cannot delete your own administrator account.",
+            )
+
+        user = await admin_repository.get_user_by_id(user_id)
+        if user is None:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found.",
+            )
+
+        current_role = (
+            user.platformRole.value
+            if hasattr(user.platformRole, "value")
+            else user.platformRole
+        )
+
+        # Prevent deleting the last remaining administrator
+        if current_role == "ADMIN":
+            admin_count = await admin_repository.count_admins()
+            if admin_count <= 1:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Cannot delete the last remaining platform administrator.",
+                )
+
+        # Check relationships protected by onDelete: Restrict
+        org_count = await admin_repository.count_user_created_organizations(user_id)
+        if org_count > 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot delete user who is the creator of {org_count} organization(s). Reassign or delete those organizations first.",
+            )
+
+        api_key_count = await admin_repository.count_user_created_api_keys(user_id)
+        if api_key_count > 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot delete user who created {api_key_count} active API key(s). Revoke or delete those API keys first.",
+            )
+
+        file_count = await admin_repository.count_user_uploaded_files(user_id)
+        if file_count > 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot delete user who uploaded {file_count} document(s). Remove their documents first.",
+            )
+
+        version_count = await admin_repository.count_user_uploaded_file_versions(user_id)
+        if version_count > 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot delete user who uploaded {version_count} document version(s). Remove their document versions first.",
+            )
+
+        try:
+            await admin_repository.delete_user(user_id)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=400,
+                detail="Unable to delete user due to associated records.",
+            ) from exc
+
     
     # -----------------------------------------------------------------
     # Admin Project Management

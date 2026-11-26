@@ -1,6 +1,6 @@
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 class AdminOverviewResponse(BaseModel):
     """Platform-wide statistics for the Admin Overview dashboard."""
@@ -76,6 +76,21 @@ class AdminUserRoleUpdate(BaseModel):
     """Request body for changing a user's platform role."""
 
     platform_role: str
+
+
+class AdminUserCreateRequest(BaseModel):
+    """Request body for creating a new platform user via Admin Console."""
+
+    email: EmailStr
+    password: str = Field(
+        min_length=12,
+        max_length=128,
+        description="User password, enforced to at least 12 characters for security.",
+    )
+    platform_role: str = Field(
+        default="USER",
+        description="Platform role for the user: USER or ADMIN.",
+    )
 
 
 class AdminUserRoleResponse(BaseModel):

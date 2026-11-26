@@ -12,7 +12,9 @@ from app.services.admin_service import admin_service
 from app.schemas.admin import (
     AdminOverviewResponse,
     AdminActivityResponse,
+    AdminUserItem,
     AdminUserListResponse,
+    AdminUserCreateRequest,
     AdminUserRoleUpdate,
     AdminUserRoleResponse,
     AdminProjectListResponse,
@@ -101,6 +103,41 @@ async def update_admin_user_role(
         platform_role=payload.platform_role,
         current_admin_id=admin.id,
     )
+
+
+@router.post(
+    "/users",
+    response_model=AdminUserItem,
+    status_code=201,
+)
+async def create_admin_user(
+    payload: AdminUserCreateRequest,
+    admin=Depends(get_current_admin),
+):
+    """Create a new platform user."""
+
+    return await admin_service.create_user(
+        email=str(payload.email),
+        password=payload.password,
+        platform_role=payload.platform_role,
+    )
+
+
+@router.delete(
+    "/users/{user_id}",
+    status_code=204,
+)
+async def delete_admin_user(
+    user_id: str,
+    admin=Depends(get_current_admin),
+):
+    """Delete a platform user."""
+
+    await admin_service.delete_user(
+        user_id=user_id,
+        current_admin_id=admin.id,
+    )
+    return None
 
 
 # -------------------------------------------------------------

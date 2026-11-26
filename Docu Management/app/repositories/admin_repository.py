@@ -143,6 +143,42 @@ class AdminRepository:
             where={"platformRole": "ADMIN"}
         )
 
+    async def get_user_by_email(self, email: str):
+        return await prisma.user.find_unique(
+            where={"email": email.lower().strip()}
+        )
+
+    async def create_user(
+        self,
+        email: str,
+        password_hash: str,
+        platform_role: str = "USER",
+    ):
+        return await prisma.user.create(
+            data={
+                "email": email.lower().strip(),
+                "passwordHash": password_hash,
+                "platformRole": platform_role,
+            }
+        )
+
+    async def count_user_created_organizations(self, user_id: str) -> int:
+        return await prisma.organization.count(where={"createdById": user_id})
+
+    async def count_user_created_api_keys(self, user_id: str) -> int:
+        return await prisma.apikey.count(where={"createdById": user_id})
+
+    async def count_user_uploaded_files(self, user_id: str) -> int:
+        return await prisma.projectfile.count(where={"uploadedById": user_id})
+
+    async def count_user_uploaded_file_versions(self, user_id: str) -> int:
+        return await prisma.fileversion.count(where={"uploadedById": user_id})
+
+    async def delete_user(self, user_id: str):
+        return await prisma.user.delete(
+            where={"id": user_id}
+        )
+
     async def update_user_role(self, user_id: str, platform_role: str):
         return await prisma.user.update(
             where={"id": user_id},

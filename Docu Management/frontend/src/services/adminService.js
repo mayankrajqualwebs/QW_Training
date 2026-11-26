@@ -39,6 +39,20 @@ export const adminService = {
         return response.data;
     },
 
+    async createUser({ email, password, platform_role = "USER" }) {
+        const response = await api.post("/admin/users", {
+            email,
+            password,
+            platform_role,
+        });
+
+        return response.data;
+    },
+
+    async deleteUser(userId) {
+        await api.delete(`/admin/users/${userId}`);
+    },
+
     async getProjects(params = {}) {
         const response = await api.get("/admin/projects", {
             params,
