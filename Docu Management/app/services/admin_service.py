@@ -379,6 +379,129 @@ class AdminService:
                 revoked_at=datetime.now(timezone.utc),
             )
 
+    # -------------------------------------------------------------
+    # Platform API Monitoring
+    # -------------------------------------------------------------
+
+    async def get_monitoring_summary(
+        self,
+        days: int = 7,
+    ) -> dict:
+        from datetime import datetime, timedelta, timezone
+
+        if days < 1 or days > 30:
+            raise HTTPException(
+                status_code=400,
+                detail="Days must be between 1 and 30",
+            )
+
+        start_date = datetime.now(timezone.utc) - timedelta(
+            days=days
+        )
+
+        total_requests, successful_requests, failed_requests, average_latency = (
+            await asyncio.gather(
+                admin_repository.count_all_request_logs(
+                    start_date=start_date,
+                ),
+                admin_repository.count_request_logs_by_status(
+                    start_date,
+                    {
+                        "gte": 200,
+                        "lt": 400,
+                    },
+                ),
+                admin_repository.count_request_logs_by_status(
+                    start_date,
+                    {
+                        "gte": 400,
+                    },
+                ),
+                admin_repository.get_average_request_latency(
+                    start_date,
+                ),
+            )
+        )
+
+        error_rate = (
+            (failed_requests / total_requests) * 100
+            if total_requests
+            else 0
+        )
+
+        return {
+            "days": days,
+            "total_requests": total_requests,
+            "successful_requests": successful_requests,
+            "failed_requests": failed_requests,
+            "error_rate": round(error_rate, 2),
+            "average_latency_ms": round(
+                average_latency,
+                2,
+            ),
+        }
+
+    async def get_monitoring_requests(
+        self,
+        search: str | None = None,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        method: str | None = None,
+        status_category: str | None = None,
+        days: int = 7,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict:
+        from datetime import datetime, timedelta, timezone
+
+        if days < 1 or days > 30:
+            raise HTTPException(
+                status_code=400,
+                detail="Days must be between 1 and 30",
+            )
+
+        if status_category and status_category not in {
+            "success",
+            "error",
+        }:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid status category",
+            )
+
+        start_date = datetime.now(timezone.utc) - timedelta(
+            days=days
+        )
+
+        skip = (page - 1) * page_size
+
+        filters = {
+            "search": search,
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "method": method,
+            "status_category": status_category,
+            "start_date": start_date,
+        }
+
+        requests, total = await asyncio.gather(
+            admin_repository.list_all_request_logs(
+                skip=skip,
+                take=page_size,
+                **filters,
+            ),
+            admin_repository.count_all_request_logs(
+                **filters,
+            ),
+        )
+
+        return {
+            "requests": requests,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        }
+
 
 
 

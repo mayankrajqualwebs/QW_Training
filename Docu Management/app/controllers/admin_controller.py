@@ -21,6 +21,8 @@ from app.schemas.admin import (
     AdminDocumentListResponse,
     AdminApiKeyItem,
     AdminApiKeyListResponse,
+    AdminMonitoringSummary,
+    AdminMonitoringRequestListResponse,
 )
 
 
@@ -301,3 +303,88 @@ async def revoke_admin_api_key(
 ):
     await admin_service.revoke_api_key(api_key_id)
     return None
+
+
+# -------------------------------------------------------------
+# Platform API Monitoring
+# -------------------------------------------------------------
+
+@router.get(
+    "/monitoring/summary",
+    response_model=AdminMonitoringSummary,
+)
+async def get_admin_monitoring_summary(
+    days: int = Query(default=7, ge=1, le=30),
+    admin=Depends(get_current_admin),
+):
+    return await admin_service.get_monitoring_summary(
+        days=days,
+    )
+
+
+@router.get(
+    "/monitoring/requests",
+    response_model=AdminMonitoringRequestListResponse,
+)
+async def get_admin_monitoring_requests(
+    search: str | None = Query(
+        default=None,
+        max_length=255,
+    ),
+    organization_id: str | None = Query(default=None),
+    project_id: str | None = Query(default=None),
+    method: str | None = Query(default=None),
+    status_category: str | None = Query(default=None),
+    days: int = Query(default=7, ge=1, le=30),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(
+        default=20,
+        ge=1,
+        le=100,
+    ),
+    admin=Depends(get_current_admin),
+):
+    result = await admin_service.get_monitoring_requests(
+        search=search,
+        organization_id=organization_id,
+        project_id=project_id,
+        method=method,
+        status_category=status_category,
+        days=days,
+        page=page,
+        page_size=page_size,
+    )
+
+    requests = []
+
+    for log in result["requests"]:
+        requests.append({
+            "id": log.id,
+            "method": log.method,
+            "path": log.path,
+            "status_code": log.statusCode,
+            "latency_ms": log.latencyMs,
+            "created_at": log.createdAt,
+            "project_id": log.projectId,
+            "project_name": log.project.name,
+            "organization_id": log.project.organizationId,
+            "organization_name": log.project.organization.name,
+            "api_key_id": log.apiKeyId,
+            "api_key_name": (
+                log.apiKey.name
+                if log.apiKey
+                else None
+            ),
+            "api_key_prefix": (
+                log.apiKey.keyPrefix
+                if log.apiKey
+                else None
+            ),
+        })
+
+    return {
+        "requests": requests,
+        "total": result["total"],
+        "page": result["page"],
+        "page_size": result["page_size"],
+    }

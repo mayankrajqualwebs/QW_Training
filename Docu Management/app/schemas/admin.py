@@ -170,3 +170,38 @@ class AdminApiKeyListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class AdminMonitoringSummary(BaseModel):
+    days: int
+    total_requests: int
+    successful_requests: int
+    failed_requests: int
+    error_rate: float
+    average_latency_ms: float
+
+
+class AdminMonitoringRequestItem(BaseModel):
+    id: str
+    method: str
+    path: str
+    status_code: int
+    latency_ms: int
+    created_at: datetime
+
+    project_id: str
+    project_name: str
+
+    organization_id: str
+    organization_name: str
+
+    api_key_id: str | None = None
+    api_key_name: str | None = None
+    api_key_prefix: str | None = None
+
+
+class AdminMonitoringRequestListResponse(BaseModel):
+    requests: list[AdminMonitoringRequestItem]
+    total: int
+    page: int
+    page_size: int

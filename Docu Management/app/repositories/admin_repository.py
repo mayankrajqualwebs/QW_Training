@@ -247,8 +247,140 @@ class AdminRepository:
             status=status,
         )
 
-        return await prisma.apikey.count(where=where)
+        return await prisma.apikey.count(where=where)    
 
+
+
+
+    # -------------------------------------------------------------
+    # Platform API Monitoring
+    # -------------------------------------------------------------
+
+    def _request_log_filters(
+        self,
+        search: str | None = None,
+        organization_id: str | None = None,
+        project_id: str | None = None,
+        method: str | None = None,
+        status_category: str | None = None,
+        start_date: datetime | None = None,
+    ) -> dict:
+        where = {}
+
+        if search and search.strip():
+            term = search.strip()
+
+            where["OR"] = [
+                {
+                    "path": {
+                        "contains": term,
+                        "mode": "insensitive",
+                    }
+                },
+                {
+                    "method": {
+                        "contains": term,
+                        "mode": "insensitive",
+                    }
+                },
+            ]
+
+        if organization_id:
+            where["project"] = {
+                "organizationId": organization_id,
+            }
+
+        if project_id:
+            where["projectId"] = project_id
+
+        if method:
+            where["method"] = method.upper()
+
+        if start_date:
+            where["createdAt"] = {
+                "gte": start_date,
+            }
+
+        if status_category == "success":
+            where["statusCode"] = {
+                "gte": 200,
+                "lt": 400,
+            }
+
+        elif status_category == "error":
+            where["statusCode"] = {
+                "gte": 400,
+            }
+
+        return where
+
+    async def count_all_request_logs(
+        self,
+        **filters,
+    ) -> int:
+        where = self._request_log_filters(**filters)
+
+        return await prisma.requestlog.count(
+            where=where,
+        )
+
+    async def list_all_request_logs(
+        self,
+        skip: int = 0,
+        take: int = 20,
+        **filters,
+    ):
+        where = self._request_log_filters(**filters)
+
+        return await prisma.requestlog.find_many(
+            where=where,
+            skip=skip,
+            take=take,
+            order={
+                "createdAt": "desc",
+            },
+            include={
+                "project": {
+                    "include": {
+                        "organization": True,
+                    },
+                },
+                "apiKey": True,
+            },
+        )
+
+    async def count_request_logs_by_status(
+        self,
+        start_date: datetime,
+        status_code_filter: dict,
+    ) -> int:
+        return await prisma.requestlog.count(
+            where={
+                "createdAt": {
+                    "gte": start_date,
+                },
+                "statusCode": status_code_filter,
+            }
+        )
+
+    async def get_average_request_latency(
+        self,
+        start_date: datetime,
+    ) -> float:
+        result = await prisma.requestlog.aggregate(
+            where={
+                "createdAt": {
+                    "gte": start_date,
+                },
+            },
+            _avg={
+                "latencyMs": True,
+            },
+        )
+
+        average = result._avg.latencyMs
+
+        return float(average or 0)
 
 
 
