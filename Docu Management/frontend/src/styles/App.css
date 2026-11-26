@@ -5398,3 +5398,157 @@ td code {
 .document-preview-unsupported p {
   color: var(--muted-color, #71858a);
 }
+
+
+/* User Overview - Recent Activity */
+
+.user-recent-activity {
+  margin-top: 20px;
+}
+
+.user-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.user-activity-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  background: var(--panel-background, #ffffff);
+}
+
+.user-activity-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 14px;
+  color: var(--text-secondary, #64748b);
+}
+
+.user-activity-card-heading h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+}
+
+.user-activity-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color, #edf0f4);
+}
+
+.user-activity-item:first-child {
+  padding-top: 0;
+}
+
+.user-activity-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.user-activity-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--accent-soft, #eff6ff);
+  color: var(--accent-color, #3978e8);
+}
+
+.file-activity-icon {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.user-activity-icon>span {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.activity-status-success {
+  color: #15803d;
+}
+
+.activity-status-warning {
+  color: #b45309;
+}
+
+.activity-status-error {
+  color: #dc2626;
+}
+
+.user-activity-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.user-activity-details strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-activity-details>span {
+  font-size: 12px;
+  color: var(--text-secondary, #64748b);
+  overflow-wrap: anywhere;
+}
+
+.user-activity-details .activity-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.user-activity-empty {
+  padding: 18px 0;
+  font-size: 13px;
+  color: var(--text-secondary, #64748b);
+  text-align: center;
+}
+
+.activity-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 100px;
+  color: var(--text-secondary, #64748b);
+  font-size: 13px;
+}
+
+.activity-error {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .user-activity-grid {
+    grid-template-columns: 1fr;
+  }
+}

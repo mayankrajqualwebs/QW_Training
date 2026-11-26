@@ -13,6 +13,7 @@ import { StatusCodeBreakdown } from "../features/analytics/components/StatusCode
 import { KeyList } from "../features/apiKeys/components/KeyList";
 import { ApiTester } from "../features/apiKeys/components/ApiTester";
 import { useNavigate } from "react-router-dom";
+import { RecentActivity } from "../features/activity/components/RecentActivity";
 
 export function OverviewPage() {
     const {
@@ -205,6 +206,9 @@ export function OverviewPage() {
 
             {/* Interactive Protected API Tester */}
             <ApiTester />
+
+            {/* Recent project activity */}
+            <RecentActivity />
         </>
     );
 }
