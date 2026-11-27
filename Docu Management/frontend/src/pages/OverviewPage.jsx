@@ -1,10 +1,10 @@
+
 import { useWorkspace } from "../hooks/useWorkspace";
 import {
     Activity,
     KeyRound,
     FolderKanban,
     ShieldCheck,
-    Plus,
 } from "lucide-react";
 import { Metric } from "../components/Metric";
 import { EmptyMessage } from "../components/EmptyMessage";
@@ -13,6 +13,7 @@ import { StatusCodeBreakdown } from "../features/analytics/components/StatusCode
 import { KeyList } from "../features/apiKeys/components/KeyList";
 import { ApiTester } from "../features/apiKeys/components/ApiTester";
 import { useNavigate } from "react-router-dom";
+import { RecentActivity } from "../features/activity/components/RecentActivity";
 
 export function OverviewPage() {
     const {
@@ -24,9 +25,7 @@ export function OverviewPage() {
         projectId,
         selectedProject,
         keys,
-        handleRevokeClick,
         setTestingKey,
-        setShowKeyForm,
         triggerScrollToTester,
         setNotice,
     } = useWorkspace();
@@ -35,8 +34,14 @@ export function OverviewPage() {
 
     const chartData = summary
         ? [
-            { name: "Successful", requests: summary.successful_requests },
-            { name: "Errors", requests: summary.error_requests },
+            {
+                name: "Successful",
+                requests: summary.successful_requests,
+            },
+            {
+                name: "Errors",
+                requests: summary.error_requests,
+            },
         ]
         : [];
 
@@ -48,32 +53,42 @@ export function OverviewPage() {
                     value={summary?.total_requests}
                     icon={<Activity size={18} />}
                 />
+
                 <Metric
-                    title="Active API Keys"
+                    title="Assigned API Keys"
                     value={activeKeys.length}
                     icon={<KeyRound size={18} />}
                 />
+
                 <Metric
                     title="Projects"
                     value={projects.length}
                     icon={<FolderKanban size={18} />}
                 />
+
                 <Metric
                     title="Error Rate"
                     value={
-                        summary ? `${summary.error_rate_percent.toFixed(2)}%` : undefined
+                        summary
+                            ? `${summary.error_rate_percent.toFixed(2)}%`
+                            : undefined
                     }
                     icon={<ShieldCheck size={18} />}
                 />
             </section>
 
             <section className="two-column">
+                {/* Request Traffic */}
                 <div className="panel">
                     <div className="panel-heading">
                         <div>
                             <h2>Request Traffic</h2>
-                            <p>Analytics for {selectedProject?.name ?? "selected project"}</p>
+                            <p>
+                                Analytics for{" "}
+                                {selectedProject?.name ?? "selected project"}
+                            </p>
                         </div>
+
                         <select
                             value={days}
                             onChange={(e) => setDays(Number(e.target.value))}
@@ -87,9 +102,12 @@ export function OverviewPage() {
                     {summary ? (
                         <>
                             <div className="analytics-highlight">
-                                <strong>{summary.total_requests.toLocaleString()}</strong>
+                                <strong>
+                                    {summary.total_requests.toLocaleString()}
+                                </strong>
                                 <span>
-                                    total requests over the last {summary.period_days} days
+                                    total requests over the last{" "}
+                                    {summary.period_days} days
                                 </span>
                             </div>
 
@@ -103,12 +121,16 @@ export function OverviewPage() {
                             <div className="analytics-details">
                                 <div>
                                     <span>Successful</span>
-                                    <strong>{summary.successful_requests}</strong>
+                                    <strong>
+                                        {summary.successful_requests}
+                                    </strong>
                                 </div>
+
                                 <div>
                                     <span>Errors</span>
                                     <strong>{summary.error_requests}</strong>
                                 </div>
+
                                 <div>
                                     <span>Avg Latency</span>
                                     <strong>
@@ -117,7 +139,10 @@ export function OverviewPage() {
                                 </div>
                             </div>
 
-                            <h3 className="subheading">Status Code Breakdown</h3>
+                            <h3 className="subheading">
+                                Status Code Breakdown
+                            </h3>
+
                             <StatusCodeBreakdown
                                 breakdown={summary.status_code_breakdown}
                                 variant="pills"
@@ -134,49 +159,58 @@ export function OverviewPage() {
                     )}
                 </div>
 
+                {/* Assigned API Keys */}
                 <div className="panel">
                     <div className="panel-heading">
                         <div>
-                            <h2>API Keys</h2>
-                            <p>Credentials for {selectedProject?.name ?? "selected project"}</p>
+                            <h2>Assigned API Keys</h2>
+                            <p>
+                                API credentials available to you for{" "}
+                                {selectedProject?.name ?? "the selected project"}
+                            </p>
                         </div>
-                        <button
-                            className="primary-button compact"
-                            disabled={!projectId}
-                            onClick={() => setShowKeyForm(true)}
-                        >
-                            <Plus size={15} /> Create
-                        </button>
                     </div>
 
-                    <KeyList
-                        keys={keys.slice(0, 5)}
-                        onRevoke={handleRevokeClick}
-                        onSelectForTest={(key) => {
-                            setTestingKey("");
-                            triggerScrollToTester?.();
-                            setNotice(
-                                `Paste the original API key secret for "${key.name}" to test it.`
-                            );
-                        }}
-                    />
+                    {keys.length > 0 ? (
+                        <>
+                            <KeyList
+                                keys={keys.slice(0, 5)}
+                                onSelectForTest={(key) => {
+                                    setTestingKey("");
+                                    triggerScrollToTester?.();
 
-                    {keys.length > 5 && (
-                        <button
-                            className="primary-button compact"
-                            onClick={() => navigate("/workspace/api-access")}
-                        >
-                            View all {keys.length} keys →
-                        </button>
+                                    setNotice(
+                                        `Enter the secret for "${key.name}" in the API Test Console.`
+                                    );
+                                }}
+                            />
+
+                            {keys.length > 5 && (
+                                <button
+                                    className="primary-button compact"
+                                    onClick={() =>
+                                        navigate("/workspace/api-access")
+                                    }
+                                >
+                                    View all assigned keys →
+                                </button>
+                            )}
+                        </>
+                    ) : (
+                        <EmptyMessage
+                            message="No API keys are assigned to you for this project yet."
+                        />
                     )}
                 </div>
             </section>
 
-            {/* LIVE PROTECTED API TESTER */}
+            {/* Interactive Protected API Tester */}
             <ApiTester />
+
+            {/* Recent project activity */}
+            <RecentActivity />
         </>
     );
 }
 
 export default OverviewPage;
-

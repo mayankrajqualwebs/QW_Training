@@ -26,6 +26,8 @@ export function FilesPage() {
 
     const [statusFilter, setStatusFilter] = useState("ALL");
 
+    const [preview, setPreview] = useState(null);
+
     const loadFiles = useCallback(async () => {
         if (!projectId) {
             setFiles([]);
@@ -125,6 +127,33 @@ export function FilesPage() {
         }
     };
 
+    const handlePreview = async (file) => {
+        setPreview({
+            file,
+            url: "",
+            loading: true,
+            error: "",
+        });
+
+        try {
+            const data = await fileService.getDownloadUrl(file.id);
+
+            setPreview({
+                file,
+                url: data.download_url,
+                loading: false,
+                error: "",
+            });
+        } catch (error) {
+            setPreview({
+                file,
+                url: "",
+                loading: false,
+                error: errorMessage(error),
+            });
+        }
+    };
+
     return (
         <section className="panel">
             <div className="panel-heading">
@@ -177,6 +206,71 @@ export function FilesPage() {
                     ))}
                 </div>
             </div>
+
+            {preview && (
+                <div className="modal-overlay">
+                    <div className="modal document-preview-modal">
+                        <div className="document-preview-header">
+                            <div>
+                                <h3>{preview.file.name}</h3>
+                                <p className="text-muted">
+                                    Document Preview
+                                </p>
+                            </div>
+
+                            <button
+                                className="secondary-button compact"
+                                onClick={() => setPreview(null)}
+                            >
+                                Close
+                            </button>
+                        </div>
+
+                        <div className="document-preview-body">
+                            {preview.loading ? (
+                                <p>Preparing document preview...</p>
+                            ) : preview.error ? (
+                                <div className="alert alert-error">
+                                    {preview.error}
+                                </div>
+                            ) : preview.url ? (
+                                preview.file.contentType === "application/pdf" ? (
+                                    <iframe
+                                        src={preview.url}
+                                        title={preview.file.name}
+                                        className="document-preview-frame"
+                                    />
+                                ) : preview.file.contentType?.startsWith("image/") ? (
+                                    <img
+                                        src={preview.url}
+                                        alt={preview.file.name}
+                                        className="document-preview-image"
+                                    />
+                                ) : (
+                                    <div className="document-preview-unsupported">
+                                        <FileText size={36} />
+
+                                        <h4>Preview not available</h4>
+
+                                        <p>
+                                            This file type cannot be previewed directly
+                                            in the application.
+                                        </p>
+
+                                        <button
+                                            className="primary-button"
+                                            onClick={() => downloadFile(preview.file)}
+                                        >
+                                            <Download size={14} />
+                                            Download File
+                                        </button>
+                                    </div>
+                                )
+                            ) : null}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {renamingFile && (
                 <div className="modal-overlay">
@@ -313,6 +407,13 @@ export function FilesPage() {
                                             </td>
                                             <td>
                                                 <div className="action-buttons">
+                                                    <button
+                                                        className="secondary-button compact"
+                                                        onClick={() => handlePreview(file)}
+                                                        disabled={file.status !== "UPLOADED"}
+                                                    >
+                                                        Preview
+                                                    </button>
                                                     <button
                                                         className="secondary-button compact"
                                                         onClick={() => downloadFile(file)}

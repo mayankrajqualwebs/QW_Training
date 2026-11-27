@@ -30,6 +30,7 @@ from app.api.routers import (
     projects_router,
     usage_router,
     files_router,
+    user_api_keys_router,
 )
 from app.core.config import settings
 from app.core.security import hash_api_key
@@ -201,3 +202,4 @@ app.include_router(analytics_router)       # /organizations/{org_id}/projects/{p
 app.include_router(api_test_router)
 app.include_router(files_router)
 app.include_router(admin_router)
+app.include_router(user_api_keys_router)

@@ -169,10 +169,13 @@ class ApiKeyService:
         user_id: str,
     ) -> list[ApiKeyResponse]:
         """Lists all API keys for a project (public fields only)."""
-        await self.get_membership_or_raise(organization_id, user_id)
+        membership = await self.get_membership_or_raise(organization_id, user_id)
         await self.get_project_or_raise(organization_id, project_id)
 
         keys = await self.api_key_repo.list_by_project(project_id)
+        role = getattr(membership.role, "value", membership.role)
+        if role not in {"OWNER", "ADMIN"}:
+            keys = [k for k in keys if k.createdById == user_id]
         return [to_api_key_response(key) for key in keys]
 
     async def revoke_api_key(

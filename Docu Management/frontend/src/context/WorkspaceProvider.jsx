@@ -28,6 +28,7 @@ export function WorkspaceProvider({ children }) {
     const [keys, setKeys] = useState([]);
     const [summary, setSummary] = useState(null);
     const [days, setDays] = useState(7);
+    const [summaryLoading, setSummaryLoading] = useState(false);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -138,10 +139,41 @@ export function WorkspaceProvider({ children }) {
             setSummary(null);
             return null;
         }
-        const data = await analyticsService.summary(orgId, projId, period);
-        setSummary(data);
-        return data;
+
+        setSummaryLoading(true);
+
+        try {
+            const data = await analyticsService.summary(
+                orgId,
+                projId,
+                period
+            );
+
+            setSummary(data);
+            return data;
+        } finally {
+            setSummaryLoading(false);
+        }
     }, []);
+
+    const refreshSummary = useCallback(async () => {
+        if (!organizationId || !projectId) {
+            return null;
+        }
+
+        setError("");
+
+        try {
+            return await loadSummary(
+                organizationId,
+                projectId,
+                days
+            );
+        } catch (e) {
+            setError(errorMessage(e));
+            return null;
+        }
+    }, [organizationId, projectId, days, loadSummary]);
 
     const refreshWorkspace = useCallback(() => {
         if (!userId) return Promise.resolve();
@@ -400,6 +432,8 @@ export function WorkspaceProvider({ children }) {
                 summary,
                 days,
                 setDays,
+                summaryLoading,
+                refreshSummary,
                 loading,
                 error,
                 setError,

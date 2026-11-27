@@ -921,6 +921,8 @@ class AdminService:
                 api_key_id=api_key_id,
                 revoked_at=datetime.now(timezone.utc),
             )
+            from app.core.secret_delivery import secret_delivery_manager
+            secret_delivery_manager.revoke_secret(api_key_id)
 
     async def create_api_key(
         self,
@@ -1017,6 +1019,14 @@ class AdminService:
             project_id=project_id,
             user_id=user_id,
             expires_at=expires_at,
+        )
+
+        # Register one-time secure delivery packet for the assigned user
+        from app.core.secret_delivery import secret_delivery_manager
+        secret_delivery_manager.store_secret(
+            api_key_id=key.id,
+            user_id=user_id,
+            raw_secret=raw_key,
         )
 
         return {
