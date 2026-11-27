@@ -13,3 +13,4 @@ httpx
 boto3
 pymupdf
 python-docx
+docx
