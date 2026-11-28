@@ -2,14 +2,14 @@ from app.services.documents import extract_document
 from app.services.documents.extraction import extract_document
 from app.services.documents.preview import print_document_preview
 
-file_path = "sampleTS.docx"
+file_path = "samplelow.docx"
 
 from app.services.documents.extraction import extract_document
 from app.services.documents.preview import print_document_preview
 
 
 result = extract_document(
-    "sampleT.pdf"
+    "samplelow.docx"
 )
 
 print_document_preview(
