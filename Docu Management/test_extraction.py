@@ -1,12 +1,21 @@
 from app.services.documents import extract_document
+from app.services.documents.extraction import extract_document
+from app.services.documents.preview import print_document_preview
 
-file_path = "sampleTS.pdf"
+file_path = "sampleTS.docx"
 
-result = extract_document(file_path)
+from app.services.documents.extraction import extract_document
+from app.services.documents.preview import print_document_preview
 
-print("\nDOCUMENT:")
-print(result.document_name)
-print(result.document_type)
+
+result = extract_document(
+    "sampleT.pdf"
+)
+
+print_document_preview(
+    result,
+    max_blocks=30,
+)
 
 print("\nPAGES:")
 for page in result.pages:
